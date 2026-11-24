@@ -1,0 +1,29 @@
+{
+ "clima": "clima_era5land_diario.csv.gz",
+ "retraso_clima": 5,
+ "teselas": [
+  "Copernicus_DSM_COG_10_S16_00_W065_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S16_00_W066_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S16_00_W067_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S17_00_W065_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S17_00_W066_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S17_00_W067_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S18_00_W065_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S18_00_W066_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S18_00_W067_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S19_00_W065_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S19_00_W066_00_DEM.tif",
+  "Copernicus_DSM_COG_10_S19_00_W067_00_DEM.tif",
+  "ESA_WorldCover_10m_2021_v200_S18W066_Map.tif",
+  "ESA_WorldCover_10m_2021_v200_S18W069_Map.tif",
+  "ESA_WorldCover_10m_2021_v200_S21W066_Map.tif",
+  "ESA_WorldCover_10m_2021_v200_S21W069_Map.tif"
+ ],
+ "focos_hasta": "2026-11-19",
+ "capas": [
+  "cobertura",
+  "perdida_bosque",
+  "poblacion",
+  "quemas"
+ ]
+}

@@ -1,0 +1,160 @@
+{
+ "celdas_departamento": 185072,
+ "area_km2": 54391,
+ "detecciones_archivo_usuario": 86609,
+ "detecciones_vegetacion_depto": 80310,
+ "fuentes_de_calor_fijas": {
+  "regla": "10 o más semanas con detección y al menos 80% de detecciones nocturnas",
+  "celdas": 10,
+  "celdas_en_departamento": 8,
+  "detecciones_retiradas": 350,
+  "celdas_semana_retiradas_en_departamento": 228
+ },
+ "periodo_focos": [
+  "2012-01-20",
+  "2025-12-21"
+ ],
+ "pct_focos_tropico": 80.6,
+ "celdas_con_fuego_alguna_vez_pct": 19.4,
+ "celda_semanas_positivas": 66532,
+ "tasa_celda_semana_pct": 0.0494,
+ "concentracion": {
+  "top_1pct_celdas": 18.2,
+  "top_5pct_celdas": 53.5,
+  "top_10pct_celdas": 78.0
+ },
+ "dias_sin_satelite": 51,
+ "rachas_sin_satelite": [
+  [
+   "2014-01-25",
+   "2014-01-27",
+   3
+  ],
+  [
+   "2016-02-27",
+   "2016-02-28",
+   2
+  ],
+  [
+   "2017-05-28",
+   "2017-05-30",
+   3
+  ],
+  [
+   "2021-02-10",
+   "2021-02-11",
+   2
+  ],
+  [
+   "2022-07-27",
+   "2022-08-10",
+   15
+  ],
+  [
+   "2023-02-04",
+   "2023-02-05",
+   2
+  ],
+  [
+   "2023-07-26",
+   "2023-07-27",
+   2
+  ],
+  [
+   "2024-05-30",
+   "2024-06-03",
+   5
+  ],
+  [
+   "2024-07-10",
+   "2024-07-15",
+   6
+  ],
+  [
+   "2024-07-24",
+   "2024-07-28",
+   5
+  ],
+  [
+   "2024-09-26",
+   "2024-09-26",
+   1
+  ],
+  [
+   "2024-11-03",
+   "2024-11-05",
+   3
+  ],
+  [
+   "2025-04-28",
+   "2025-04-29",
+   2
+  ]
+ ],
+ "semanas_con_pocos_dias": [
+  [
+   "2022-07-25",
+   2
+  ],
+  [
+   "2022-08-01",
+   0
+  ],
+  [
+   "2024-05-27",
+   3
+  ],
+  [
+   "2024-07-08",
+   2
+  ],
+  [
+   "2024-07-22",
+   2
+  ]
+ ],
+ "puntos_clima": 16,
+ "series_clima_distintas": 10,
+ "lluvia_maxima_registrada_mm": 808.4,
+ "valores_lluvia_mayor_100mm": 27,
+ "fechas_lluvia_mayor_100mm": [
+  "2020-06-04",
+  "2020-06-05"
+ ],
+ "lluvia_anual_power_mm": {
+  "Arani": 520.0,
+  "Arque": 433.0,
+  "Ayopaya": 908.0,
+  "Bolivar": 448.0,
+  "Campero": 628.0,
+  "Capinota": 469.0,
+  "Carrasco": 819.0,
+  "Cercado": 469.0,
+  "Chapare": 1027.0,
+  "EstebanArze": 433.0,
+  "GermánJordán": 469.0,
+  "Mizque": 507.0,
+  "Punata": 520.0,
+  "Quillacollo": 469.0,
+  "Tapacarí": 483.0,
+  "Tiraque": 520.0
+ },
+ "cobertura": [
+  {
+   "capa": "Relieve (Copernicus DEM 30 m)",
+   "area_cubierta_pct": 68.0,
+   "focos_cubiertos_pct": 56.9
+  },
+  {
+   "capa": "Cobertura de suelo (ESA WorldCover 10 m)",
+   "area_cubierta_pct": 86.4,
+   "focos_cubiertos_pct": 99.3
+  }
+ ],
+ "ndvi": {
+  "desde": "2022-01-01",
+  "hasta": "2026-09-11",
+  "unidad": "promedio por provincia",
+  "decadas": 170
+ }
+}

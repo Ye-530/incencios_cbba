@@ -1,0 +1,23 @@
+{
+ "semana_inicio": "2025-10-06",
+ "semana_fin": "2025-10-12",
+ "anio_iso": 2025,
+ "semana_iso": 41,
+ "modo": "operativo",
+ "umbrales": [
+  0.0003,
+  0.001,
+  0.003,
+  0.01
+ ],
+ "celdas_por_clase": {
+  "Muy bajo": 101207,
+  "Bajo": 41603,
+  "Moderado": 9634,
+  "Alto": 10086,
+  "Muy alto": 22542
+ },
+ "celdas_esperadas_con_fuego": 629.4909057617188,
+ "probabilidad_maxima": 0.05617252737283707,
+ "avisos": []
+}

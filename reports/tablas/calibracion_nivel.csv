@@ -1,0 +1,9 @@
+conjunto,modo,probabilidad,observadas,esperadas,razon,perdida_log
+validación,operativo,"Del modelo, corregida por el muestreo (la que se usa)",13410,9343.813650963262,0.6967795414588562,0.004586272978631385
+validación,estacional,"Del modelo, corregida por el muestreo (la que se usa)",13410,8202.68693893671,0.611684335491179,0.004762146732737797
+validación,referencia,Tasa base constante,13410,13410.000000000004,1.0000000000000002,0.005911093901777526
+prueba,operativo,"Del modelo, corregida por el muestreo (la que se usa)",8197,7160.272710788234,0.8735235709147534,0.002977740992744464
+prueba,operativo,Recalibrada con isotónica sobre 2022–2023 (descartada),8197,10954.198586612454,1.3363667910958221,0.0029912268224750933
+prueba,estacional,"Del modelo, corregida por el muestreo (la que se usa)",8197,8750.95955104053,1.0675807674808504,0.0030473427826054975
+prueba,estacional,Recalibrada con isotónica sobre 2022–2023 (descartada),8197,14652.53317923921,1.7875482712259618,0.0031358996943416997
+prueba,referencia,Tasa base constante,8197,8197.0,1.0,0.0039327211586042184

@@ -1,0 +1,89 @@
+{
+ "variante": "clima_compacto",
+ "busqueda": [],
+ "parametros": {},
+ "excluir": [
+  "prec_7",
+  "prec_90",
+  "tmax_7",
+  "hrmin_7",
+  "viento_7",
+  "vpd_7",
+  "ffmc",
+  "dmc",
+  "isi",
+  "bui",
+  "fwi",
+  "fwi_max7",
+  "suelo_sup_7",
+  "suelo_raiz_7",
+  "an_hrmin_7",
+  "an_fwi_7",
+  "an_dc"
+ ],
+ "estacional": {
+  "n_iter": 50,
+  "historial": [
+   {
+    "n_iter": 25,
+    "perdida": 0.09751447234795693,
+    "pr_auc_muestra": 0.32695402069527724
+   },
+   {
+    "n_iter": 50,
+    "perdida": 0.09428738079585715,
+    "pr_auc_muestra": 0.33020978106882903
+   },
+   {
+    "n_iter": 75,
+    "perdida": 0.09441268372237276,
+    "pr_auc_muestra": 0.3285462034022354
+   },
+   {
+    "n_iter": 100,
+    "perdida": 0.09482028995159451,
+    "pr_auc_muestra": 0.3282181445518154
+   },
+   {
+    "n_iter": 125,
+    "perdida": 0.09539451340061693,
+    "pr_auc_muestra": 0.3267169905427133
+   }
+  ]
+ },
+ "operativo": {
+  "n_iter": 75,
+  "historial": [
+   {
+    "n_iter": 25,
+    "perdida": 0.09188636850583227,
+    "pr_auc_muestra": 0.37951012830850417
+   },
+   {
+    "n_iter": 50,
+    "perdida": 0.08826568824677786,
+    "pr_auc_muestra": 0.38746747753414823
+   },
+   {
+    "n_iter": 75,
+    "perdida": 0.08783930269613185,
+    "pr_auc_muestra": 0.3886915896526364
+   },
+   {
+    "n_iter": 100,
+    "perdida": 0.08828214385300372,
+    "pr_auc_muestra": 0.38420721531243057
+   },
+   {
+    "n_iter": 125,
+    "perdida": 0.08866468865626771,
+    "pr_auc_muestra": 0.38328728568045667
+   },
+   {
+    "n_iter": 150,
+    "perdida": 0.08891057441083043,
+    "pr_auc_muestra": 0.3820694517594286
+   }
+  ]
+ }
+}

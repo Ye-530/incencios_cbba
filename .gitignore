@@ -1,18 +1,23 @@
-.superpowers/
+# Entorno virtual y dependencias
+.venv/
+build/
+*.egg-info/
+
+# Configuraciones de IDEs
+.idea/
+.vscode/
+
+# Temporales de Python y pruebas
 __pycache__/
 *.pyc
 .pytest_cache/
-*.egg-info/
-build/
-.venv/
+.superpowers/
+
+# Credenciales y claves privadas (NUNCA subir a GitHub)
 credenciales.json
-# datos, modelos y resultados no van en git; solo se guarda la estructura de carpetas
-/data/**
-!/data/**/
-!/data/**/.gitkeep
-/models/**
-!/models/.gitkeep
-/reports/**
-!/reports/.gitkeep
-# carpeta de resultados de la versión anterior del proyecto
+*.key
+*.token
+.env*
+
+# Resultados de versiones anteriores
 salidas/

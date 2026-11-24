@@ -1,0 +1,2 @@
+data/processed/muestra/muestra_X.npy filter=lfs diff=lfs merge=lfs -text
+data/external/landcover/ESA_WorldCover_10m_2021_v200_S21W066_Map.tif filter=lfs diff=lfs merge=lfs -text

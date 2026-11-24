@@ -1,0 +1,15 @@
+{
+  "_LEAME": "Copie este archivo como credenciales.json y complete los datos. No comparta credenciales.json: tiene sus claves.",
+  "copernicus_cds": {
+    "url": "https://cds.climate.copernicus.eu/api",
+    "key": ""
+  },
+  "earth_engine": {
+    "_LEAME": "ID del proyecto de Google Cloud registrado en Earth Engine (no es una clave AIza...). La primera vez ejecute: earthengine authenticate",
+    "proyecto": ""
+  },
+  "firms": {
+    "_LEAME": "MAP_KEY gratuita de https://firms.modaps.eosdis.nasa.gov/api/map_key/",
+    "map_key": ""
+  }
+}

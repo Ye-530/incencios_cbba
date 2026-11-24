@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "incendios-cochabamba"
+version = "2.0.0"
+description = "Riesgo semanal de incendios en Cochabamba en celdas de 500 m (CRISP-DM)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "scikit-learn>=1.4",
+    "matplotlib>=3.7",
+    "Pillow>=10.0",
+    "joblib>=1.3",
+]
+
+[project.optional-dependencies]
+descargas = ["cdsapi>=0.7.4", "netCDF4>=1.6", "earthengine-api>=1.0"]
+pruebas = ["pytest>=7.0"]
+
+[project.scripts]
+incendios = "incendios.__main__:main"
+
+[tool.setuptools]
+packages = ["incendios", "incendios.pasos"]
+
+[tool.setuptools.package-data]
+incendios = ["visor_plantilla.html"]

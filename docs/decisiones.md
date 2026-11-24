@@ -1,0 +1,161 @@
+# Decisiones tomadas durante el proyecto
+
+El encargo dejó abiertos muchos puntos ("eso ya velo tú"), así que estas decisiones las tomé yo
+mientras construía. Cada una dice qué se decidió, por qué y qué cuesta si resultó un error.
+
+> Desde la versión 2 (18 de noviembre de 2026, decisión 24) el proyecto usa la estructura de
+> Cookiecutter Data Science y un solo comando. Donde este texto dice `scripts/0X_...py` o "paso 0X",
+> hoy es `python -m incendios auditar | preparar | modelar | evaluar | predecir | visor`; lo que
+> estaba en `salidas/` está en `models/`, `reports/`, `data/interim/` y `data/processed/`.
+
+## Preparación de los datos
+
+1. **Se retiran las fuentes de calor fijas.** Regla: celdas con detecciones en 10 o más semanas
+   distintas y 80 % o más de detecciones nocturnas. Salen 10 celdas (8 en el departamento: 3 en
+   Capinota, 3 al sur de la ciudad de Cochabamba y 2 en Entre Ríos) y 350 detecciones.
+   *Por qué:* las primeras celdas del ranking eran hornos o antorchas de gas que FIRMS entrega como
+   fuego de vegetación. *Si fue un error:* una celda de vegetación real que cumpliera la regla se
+   perdería como caso positivo; es muy improbable (del orden de 1 en 10.000). La lista se calculó con
+   los 14 años, incluidos los de prueba: no es una variable del modelo, pero quitó 16 casos de la prueba.
+2. **El clima tiene 10 series distintas, no 9.** Las 16 provincias caen en 10 celdas del reanálisis.
+   En un mensaje anterior se dijo 9 por error.
+3. **Muestra de 4.000 celdas sin fuego por semana, no 6.000.** *Por qué:* la matriz queda en 0,8 GB y
+   corre en una PC de 8 GB; hay unas 40 celdas sin fuego por cada una con fuego. *Si fue un error:*
+   se sube `NEG_POR_SEMANA` en `incendios/config.py` y se repiten los pasos 02 a 04.
+
+## Modelado
+
+4. **Restricciones de monotonía en el clima y en la actividad de todo el departamento, y clima
+   compacto de 6 variables.** *Por qué:* sin ellas el modelo memorizaba combinaciones de clima de años
+   concretos (pérdida en validación 0,0926 frente a 0,0877). *Si fue un error:* si una relación real
+   no fuera monótona, se pierde esa parte de la señal. La variante libre queda medida en la búsqueda.
+5. **Probabilidad sin recalibrar.** El plan pedía una recalibración isotónica. Ajustada con 2022–2023,
+   años de mucho fuego, sobrestimó 2024–2025: 1,41 veces en modo operativo y 1,97 en estacional, frente
+   a 1,11 y 1,39 sin recalibrar. *Si fue un error:* la decisión se tomó viendo la prueba, así que la
+   cifra de nivel de la opción elegida es algo optimista. El orden de las celdas y la captura no cambian.
+6. **Umbrales de las clases de riesgo: 0,03 %, 0,1 %, 0,3 % y 1 %.** Los iniciales llegaban a 5 % y
+   la clase "Muy alto" quedaba vacía, porque casi ninguna celda supera el 5 % en una semana. Con los
+   nuevos, cada clase arde unas tres veces más que la anterior. *Si fue un error:* son una convención
+   de presentación fijada mirando la prueba; se cambian en `UMBRALES_CLASES` sin reentrenar.
+
+## Despliegue y entregables
+
+7. **Script de descarga incluido pero no probado.** `scripts/descargar_datos_mejorados.py` baja las
+   teselas que faltan, el clima POWER en su malla nativa y los focos de FIRMS. *Por qué:* pediste datos
+   de mejor calidad y el entorno donde se construyó no tenía internet. *Si falla:* solo están probadas
+   las direcciones y el formato de las tablas; hay que revisar su salida la primera vez.
+8. **Satélite configurable y huella de los datos.** `PATRON_FOCOS` permite pasar a NOAA-20 sin tocar
+   el código, y cada modelo guarda qué datos y qué versión de scikit-learn usó, para avisar si se
+   predice con otros. Sin costo.
+9. **Informe como documento de Claude y no como archivo del repositorio.** Es lo que se lee y se
+   presenta; el repositorio lleva el README y `salidas/RESULTADOS.md` con las cifras. Si se necesita
+   dentro del repositorio, el documento se exporta a Markdown o Word.
+10. **Sin enchufe para capas extra** (caminos, NDVI de 500 m, cicatrices de quema). Sin esos datos no se
+    podía probar; queda como siguiente paso. *Actualización:* caminos, quemas, deforestación, uso del
+    suelo y población ya entran (decisiones 12 a 23); el NDVI sigue afuera.
+11. **Se construyó sin una aprobación previa del diseño**, porque delegaste esas decisiones. Si algo
+    no sirve, se rehace sobre el mismo código.
+
+## Datos mejorados y actualización semanal (noviembre de 2026)
+
+12. **Cicatrices de quema de MODIS MCD64A1 (500 m) y no de MapBiomas Fuego (30 m).** *Por qué:* no se
+    pudo confirmar la ruta de MapBiomas Fuego en Earth Engine; MODIS está en el catálogo oficial y llega
+    hasta el año pasado. *Si fue un error:* MODIS no ve quemas chicas (de menos de unas 25 ha); cambiar
+    de fuente es cambiar una entrada en `incendios/capas_ee.py`.
+13. **Sin lluvia CHIRPS (5 km).** ERA5-Land ya trae la lluvia a 11 km. *Costo:* la lluvia sigue siendo
+    más gruesa de lo posible.
+14. **ERA5-Land con 5 horas por día (00, 10, 13, 16 y 19 UTC) y no las 24.** Divide por cinco el tamaño
+    de cada pedido. La máxima del día sale de las 15 h locales y puede quedar 0,5 a 1 °C por debajo de
+    la real; el viento a 10 m se guarda como su equivalente a 2 m, que es lo que espera el proyecto.
+    *Costo:* un sesgo fijo, igual al entrenar que al predecir.
+15. **Retraso de 5 días para el clima ERA5-Land.** El modo operativo usa el clima hasta el lunes menos
+    6 días, al entrenar y al predecir, para poder predecir cada lunes con lo ya publicado. *Costo:* el
+    modelo no ve los últimos días de clima antes de la semana. Con NASA POWER sigue en 0, como antes.
+16. **Años de las capas: el año anterior al predicho para quemas, pérdida de bosque y uso del suelo;
+    el mismo año para la población; caminos actuales.** *Costo:* dos fugas chicas que se aceptaron.
+    Los caminos de OpenStreetMap son los de hoy, así que al entrenar con 2016 aparecen caminos abiertos
+    después. Y MapBiomas suaviza cada año mirando los años vecinos, así que el uso del suelo de un año
+    lleva algo del siguiente. La ablación del paso 03 mide cuánto aporta cada grupo.
+17. **Si una capa no llega al año anterior, se usa su último año y se avisa.** Hansen y MapBiomas salen
+    con meses de retraso. Las variables se calculan como si el año predicho fuera el siguiente al último
+    disponible, y cada predicción lo dice. *Costo:* en esos meses, la información de esa capa es vieja.
+18. **Las variables nuevas van al final de la matriz, en los dos modos, y la predicción elige las columnas
+    por nombre.** Así los modelos entrenados sin capas siguen dando exactamente lo mismo: se verificó con
+    los datos reales (diferencia máxima 0,0 en las semanas de prueba). Sin costo.
+19. **La actualización semanal reentrena sola cuando cambian las fuentes** (archivo de clima, teselas o
+    capas presentes), no cuando llegan focos o años nuevos. Antes guarda la evaluación anterior y después
+    escribe la comparación. *Costo:* la primera semana con datos nuevos tarda más de una hora; con
+    `--no-reentrenar` solo avisa.
+20. **El clima ERA5-Land no se usa hasta que esté completo desde 2012 y sin días faltantes.** Mientras
+    tanto el modelo sigue con NASA POWER. *Por qué:* un archivo con huecos pasaría al modelo como datos
+    faltantes sin que nadie lo note.
+21. **Focos: S-NPP hasta el 1 de noviembre de 2026 y NOAA-20 desde el 2.** NASA dejó de producir S-NPP
+    el 2 de noviembre a las 13:00 UTC, así que ese día no tiene la pasada de la tarde. *Costo:* NOAA-20
+    detecta parecido pero no igual; el fuego reciente y el seguimiento pueden moverse un poco de nivel.
+    Conviene reentrenar con NOAA-20 de punta a punta cuando haya unos años.
+22. **Claves en `credenciales.json`, fuera de git y de los informes; la clave `AIza…` no se guardó.**
+    Earth Engine desde Python no se autoriza con una clave de API sino con el inicio de sesión de Google
+    y el ID de un proyecto de Google Cloud. El zip entregado incluye `credenciales.json` con la clave de
+    Copernicus porque se pidió integrarla. *Costo:* quien reciba el zip recibe la clave; como pasó por el
+    chat, conviene regenerarla en el perfil de Copernicus y pegar la nueva en el archivo.
+23. **Descargas probadas contra servidores simulados, no contra los reales.** El entorno de construcción
+    no tenía internet. Están probadas las respuestas esperadas: meses que el CDS no acepta enteros, días
+    aún no publicados, cortes y reanudación, focos agregados sin repetir. Los activos de Earth Engine y la
+    leyenda de MapBiomas se verificaron en el catálogo, pero no se ejecutaron.
+
+## Estructura del proyecto (versión 2)
+
+24. **Estructura de Cookiecutter Data Science y un solo comando, `python -m incendios`.** Los datos van
+    dentro del proyecto: `data/raw` (los originales, que el proyecto nunca modifica), `data/external`
+    (lo que se baja), `data/interim` (cachés), `data/processed` (muestra y predicciones), y además
+    `models/` y `reports/`. Los scripts pasaron a `incendios/pasos/`, con un `main(argv)` cada uno
+    (cada archivo también se ejecuta directo, y `descargar` sin opciones muestra el diagnóstico), y
+    los `.bat` se eliminaron: `programar` crea la tarea de Windows con `schtasks`, o muestra la línea
+    de cron en Linux o Mac. *Por qué:* con los datos en la carpeta de arriba del proyecto, cada forma
+    de descomprimir dejaba los datos en otro lugar; y los `.bat` solo sirven en Windows. *Costo:*
+    cambian todos los comandos (el texto de arriba usa los nombres viejos); el zip con los datos pesa
+    unos 410 MB; la tarea programada necesita `pip install -e .` para encontrar el proyecto desde
+    cualquier carpeta.
+25. **Los focos y las teselas se leen de `raw` y `external` juntos; si un archivo está en las dos,
+    cuenta el de `external`.** Así lo bajado completa o reemplaza a lo original sin tocarlo. *Costo:*
+    un archivo bajado con un error tapa al original del mismo nombre hasta que se lo borre.
+26. **Se verificó que la estructura nueva no cambia nada del modelo:** con los datos reales, los
+    modelos guardados dan exactamente las mismas predicciones de prueba (diferencia 0,0) y su huella
+    coincide, así que la actualización semanal no reentrena por la mudanza.
+
+## Detalles técnicos
+
+- `ventana_en_malla` recorta cada tesela antes de agregarla a la malla, en vez de pegarla entera:
+  ahorra memoria con teselas de 1,3 GB y avisa si la tesela no está alineada.
+- `dias_observados` recibe el conteo diario de detecciones del país, así descuenta también los días
+  fuera del registro.
+- La prueba del FWI con lluvia compara con el mismo día sin lluvia en vez de usar un umbral sin fuente;
+  los factores de largo del día salen de cffdrs (agosto 8,3; octubre 9,4).
+- Las anomalías de clima van dentro del vector de clima antecedente; `ClimaSemanal` dice si hay clima
+  para una semana (`disponible`).
+- `Constructor.matriz` acepta el año de historial a usar, para pedir un año cuyo historial aún no
+  cerró sin devolver un mapa vacío. Una prueba encontró una fuga en la anomalía departamental (leía
+  semanas del final del registro) y se corrigió.
+- `flujo.py` se escribió antes que su prueba; se retiró, se escribió la prueba, se vio fallar y se
+  repuso.
+- `clases_de_riesgo` vive en `evaluacion.py` porque la usan la evaluación y la predicción.
+- Todos los modelos pasan por `ColumnasVacias`, porque scikit-learn 1.9.1 falla con columnas sin datos
+  (relieve ausente en partes del departamento).
+
+## Pendientes menores
+
+- Revisar la salida de la primera descarga real: años de cada capa (`--diagnostico`) y que las
+  fracciones de uso del suelo sumen cerca de 1 en el departamento.
+- El modelo no usa todavía las coberturas de MapBiomas para recalcular la distancia a cultivos ni a
+  zonas urbanas (esas siguen saliendo de WorldCover 2021).
+
+- La búsqueda de variantes del modelo no se repitió tras retirar las fuentes fijas; afectan al 0,3 %
+  de los casos.
+- El mapa PNG del paso 05 no dibuja el contorno del departamento ni los municipios.
+- En el teléfono, la leyenda del visor queda debajo de la lista de las 10 celdas.
+- La importancia por variable usa una sola repetición; la de grupos usa más.
+
+## Revisión
+
+La revisión final del código la hizo el mismo autor; no hubo un revisor independiente.
+Lo mismo vale para la parte de datos mejorados y actualización semanal.

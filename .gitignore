@@ -1,0 +1,18 @@
+.superpowers/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+.venv/
+credenciales.json
+# datos, modelos y resultados no van en git; solo se guarda la estructura de carpetas
+/data/**
+!/data/**/
+!/data/**/.gitkeep
+/models/**
+!/models/.gitkeep
+/reports/**
+!/reports/.gitkeep
+# carpeta de resultados de la versión anterior del proyecto
+salidas/

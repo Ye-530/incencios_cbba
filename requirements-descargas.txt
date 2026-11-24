@@ -1,0 +1,3 @@
+# Paquetes para bajar los datos mejorados (ERA5-Land, Earth Engine), definidos en pyproject.toml.
+# Igual que: python -m pip install -e ".[descargas]"   (ejecutar desde la carpeta del proyecto)
+-e .[descargas]

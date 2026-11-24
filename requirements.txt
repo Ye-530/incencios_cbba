@@ -1,0 +1,3 @@
+# Las dependencias están en pyproject.toml. Este archivo instala el proyecto con ellas (y pytest),
+# igual que: python -m pip install -e ".[pruebas]"   (ejecutar desde la carpeta del proyecto)
+-e .[pruebas]

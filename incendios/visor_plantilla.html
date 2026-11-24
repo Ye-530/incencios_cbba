@@ -1,0 +1,643 @@
+<title>Riesgo de incendios Cochabamba</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Hoja cartográfica: superficie fría y neutra para que lo único cálido sea el riesgo. */
+:root {
+  --bg: #eef1f2; --panel: #fbfcfc; --ink: #12181c; --ink-2: #47545b; --muted: #77858c; --line: #d3dade;
+  --accent: #0b5f7a; --accent-ink: #ffffff; --accent-soft: #dcebf0;
+  --map-out: #e2e7e9; --dept: #f6f7f6; --urban: #b4bdc2; --water: #b7d3ea;
+  --b-dept: #26323a; --b-muni: #93a0a7;
+  --r1: #e99b78; --r2: #d5683b; --r3: #b33a0a; --r4: #7d1d02;
+  --obs: #2a78d6; --obs-ring: #fbfcfc; --warn-bg: #fff3d6; --warn-ink: #5c4300;
+  --f-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1316; --panel: #151c20; --ink: #e9eef0; --ink-2: #b4c0c6; --muted: #84929a; --line: #2a343a;
+    --accent: #5cc0de; --accent-ink: #06222c; --accent-soft: #17323c;
+    --map-out: #090d0f; --dept: #1b2327; --urban: #4b575d; --water: #1f3d55;
+    --b-dept: #d2dadd; --b-muni: #56636b;
+    --r1: #873b24; --r2: #be5128; --r3: #eb7443; --r4: #fdaa85;
+    --obs: #3987e5; --obs-ring: #0e1316; --warn-bg: #3a2f10; --warn-ink: #f3dc9a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1316; --panel: #151c20; --ink: #e9eef0; --ink-2: #b4c0c6; --muted: #84929a; --line: #2a343a;
+  --accent: #5cc0de; --accent-ink: #06222c; --accent-soft: #17323c;
+  --map-out: #090d0f; --dept: #1b2327; --urban: #4b575d; --water: #1f3d55;
+  --b-dept: #d2dadd; --b-muni: #56636b;
+  --r1: #873b24; --r2: #be5128; --r3: #eb7443; --r4: #fdaa85;
+  --obs: #3987e5; --obs-ring: #0e1316; --warn-bg: #3a2f10; --warn-ink: #f3dc9a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.5 var(--f-body);
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.hoja { max-width: 1240px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font: 700 26px/1.15 var(--f-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--ink-2); max-width: 72ch; }
+
+.controles {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end;
+}
+.campo { display: grid; gap: 4px; min-width: 0; }
+.campo > span, .rotulo { font: 600 11px/1.2 var(--f-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.segmento { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.segmento button {
+  font: 500 13px var(--f-body); padding: 7px 12px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer;
+}
+.segmento button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+select, input[type="date"] {
+  font: 500 13px var(--f-body); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-height: 34px;
+}
+.semana { flex: 1 1 320px; }
+.semana .fila { display: flex; gap: 6px; align-items: center; }
+.semana input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.boton {
+  font: 600 13px var(--f-body); min-width: 34px; min-height: 34px; padding: 0 9px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink);
+}
+.boton:hover { border-color: var(--accent); }
+.casillas { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.casillas label { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; cursor: pointer; }
+.casillas input { accent-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.escena { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+.mapa {
+  position: relative; background: var(--map-out); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+.mapa canvas { display: block; width: 100%; touch-action: none; cursor: grab; }
+.mapa canvas.arrastrando { cursor: grabbing; }
+.titulo-semana {
+  position: absolute; left: 12px; top: 10px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 10px; max-width: calc(100% - 70px);
+}
+.titulo-semana b { font: 600 15px/1.2 var(--f-display); display: block; }
+.titulo-semana small { color: var(--ink-2); font-size: 12px; }
+.zoom { position: absolute; right: 10px; top: 10px; display: grid; gap: 4px; }
+.lectura {
+  position: absolute; left: 12px; bottom: 10px; right: 12px; pointer-events: none;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+  display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 12.5px; color: var(--ink-2);
+}
+.lectura b { color: var(--ink); font-weight: 600; }
+.mono { font-family: var(--f-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.escala { position: absolute; right: 12px; bottom: 52px; font: 500 11px var(--f-mono); color: var(--ink-2); text-align: right; }
+.escala i { display: block; height: 4px; border: 1px solid var(--b-dept); border-top: 0; margin-top: 2px; }
+
+.panel { display: grid; gap: 12px; min-width: 0; }
+.caja { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.caja h2 { font: 600 14px/1.2 var(--f-display); margin: 0 0 8px; }
+.cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.cifra b { font: 700 22px/1.1 var(--f-display); display: block; }
+.cifra span { color: var(--ink-2); font-size: 12px; line-height: 1.3; display: block; }
+.aviso { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; margin-top: 10px; }
+.leyenda { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.leyenda li { display: grid; grid-template-columns: 18px 76px 1fr; gap: 8px; align-items: center; font-size: 12.5px; }
+.leyenda i { width: 18px; height: 14px; border-radius: 3px; border: 1px solid var(--line); }
+.leyenda span { color: var(--ink-2); }
+.leyenda .extra { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; grid-template-columns: none; color: var(--ink-2); }
+.leyenda .extra em { font-style: normal; display: inline-flex; gap: 6px; align-items: center; }
+.punto { width: 10px; height: 10px; border-radius: 50%; background: var(--obs); border: 2px solid var(--obs-ring); box-shadow: 0 0 0 1px var(--line); }
+.columna { display: grid; gap: 12px; min-width: 0; }
+.top { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, auto); grid-auto-flow: column; }
+.top button {
+  width: 100%; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; text-align: left;
+  border: 0; background: transparent; color: var(--ink); padding: 5px 6px; border-radius: 6px; cursor: pointer; font: inherit;
+}
+.top button:hover, .top button[aria-current="true"] { background: var(--accent-soft); }
+.top .n { color: var(--muted); font-size: 12px; }
+.top .lugar { min-width: 0; }
+.top .lugar small { display: block; color: var(--ink-2); }
+.top .p { font-weight: 600; font-variant-numeric: tabular-nums; }
+.notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.notas p, .notas li { color: var(--ink-2); margin: 0; }
+.notas ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.notas h2 { font: 600 15px/1.2 var(--f-display); margin: 0 0 6px; }
+.pie { color: var(--muted); font-size: 12px; }
+@media (max-width: 860px) {
+  .escena { grid-template-columns: minmax(0, 1fr); }
+  .top { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
+  header h1 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="hoja">
+  <header>
+    <h1>Riesgo de incendios en Cochabamba</h1>
+    <p>Probabilidad de que cada celda de unos 500 m tenga al menos un foco de calor en la semana elegida.
+       Mueva la semana, acerque el mapa y pase el cursor por una celda para ver su clase y coordenadas.</p>
+  </header>
+
+  <section class="controles" aria-label="Qué mapa ver">
+    <div class="campo">
+      <span id="rot-modo">Modo</span>
+      <div class="segmento" role="group" aria-labelledby="rot-modo">
+        <button type="button" id="modo-operativo" aria-pressed="true">Operativo</button>
+        <button type="button" id="modo-estacional" aria-pressed="false">Estacional</button>
+      </div>
+    </div>
+    <label class="campo"><span>Año</span><select id="anio"></select></label>
+    <div class="campo semana">
+      <span id="rot-semana">Semana</span>
+      <div class="fila">
+        <button type="button" class="boton" id="anterior" aria-label="Semana anterior">&#8249;</button>
+        <input type="range" id="semana" min="0" max="51" step="1" value="0" aria-labelledby="rot-semana">
+        <button type="button" class="boton" id="siguiente" aria-label="Semana siguiente">&#8250;</button>
+        <button type="button" class="boton" id="reproducir" aria-pressed="false">Reproducir</button>
+      </div>
+    </div>
+    <label class="campo"><span>Ir a una fecha</span><input type="date" id="fecha"></label>
+    <div class="campo">
+      <span>Capas</span>
+      <div class="casillas">
+        <label><input type="checkbox" id="ver-focos" checked> Focos observados</label>
+        <label><input type="checkbox" id="ver-limites" checked> Municipios</label>
+        <label><input type="checkbox" id="ver-contexto" checked> Ciudades y agua</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="escena">
+   <div class="columna">
+    <div class="mapa" id="marco">
+      <canvas id="mapa" role="img" aria-label="Mapa de riesgo de incendio del departamento de Cochabamba"></canvas>
+      <div class="titulo-semana"><b id="t-semana"></b><small id="t-modo"></small></div>
+      <div class="zoom">
+        <button type="button" class="boton" id="acercar" aria-label="Acercar">+</button>
+        <button type="button" class="boton" id="alejar" aria-label="Alejar">&minus;</button>
+        <button type="button" class="boton" id="encuadrar" aria-label="Ver todo el departamento">&#9633;</button>
+      </div>
+      <div class="escala" id="escala"><span></span><i></i></div>
+      <div class="lectura" id="lectura" aria-live="polite"></div>
+    </div>
+    <div class="caja">
+      <h2>Las 10 celdas de mayor riesgo</h2>
+      <ol class="top" id="top"></ol>
+    </div>
+   </div>
+
+    <aside class="panel">
+      <div class="caja">
+        <h2>Esta semana</h2>
+        <div class="cifras" id="cifras"></div>
+        <div class="aviso" id="aviso" hidden></div>
+      </div>
+      <div class="caja">
+        <h2>Clases de riesgo</h2>
+        <ul class="leyenda" id="leyenda"></ul>
+      </div>
+    </aside>
+  </section>
+
+  <section class="notas">
+    <div class="caja">
+      <h2>Los dos modos</h2>
+      <ul>
+        <li><b>Operativo:</b> usa el clima y los focos hasta el domingo anterior. Sirve para la semana que empieza.</li>
+        <li><b>Estacional:</b> usa el historial de focos hasta el año anterior y la época del año. Sirve para cualquier fecha futura, pero no sabe si ese año será seco o lluvioso.</li>
+      </ul>
+    </div>
+    <div class="caja">
+      <h2>Qué tan bien acierta</h2>
+      <ul id="desempeno"></ul>
+    </div>
+    <div class="caja">
+      <h2>Qué mide y qué no</h2>
+      <ul>
+        <li>El dato de origen son focos de calor del satélite VIIRS (NASA FIRMS): incluyen chaqueos y quemas agrícolas, no solo incendios forestales.</li>
+        <li>Una celda en riesgo muy alto no arderá con certeza: la leyenda dice cuántas ardieron en la prueba.</li>
+        <li id="nota-datos"></li>
+      </ul>
+    </div>
+  </section>
+  <p class="pie" id="pie"></p>
+</div>
+
+<script>
+const D = /*__DATOS__*/;
+</script>
+<script>
+(function () {
+  "use strict";
+  const M = D.malla, NC = M.ncols, NF = M.nfilas;
+  const COS = Math.cos(((M.norte - NF * M.celda / 2) * Math.PI) / 180);   // un grado de longitud mide menos que uno de latitud
+  const KM_CELDA = M.celda * 110.574;
+  const CLASES = ["Muy bajo", "Bajo", "Moderado", "Alto", "Muy alto"];
+  const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  const $ = (id) => document.getElementById(id);
+  const num = (x, d) => x.toLocaleString("es-BO", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  const pct = (x, d) => num(100 * x, d === undefined ? 1 : d) + " %";
+  const nombre = (s) => s.replace(/([a-záéíóúñ])([A-ZÁÉÍÓÚÑ])/g, "$1 $2");
+
+  const estado = { modo: "operativo", anio: null, k: 0, escala: 1, tx: 0, ty: 0, sel: null, clases: null, obs: null, reproduciendo: null };
+  const lienzo = $("mapa"), g = lienzo.getContext("2d");
+  const fuera = document.createElement("canvas"); fuera.width = NC; fuera.height = NF;
+  const gf = fuera.getContext("2d");
+  let muni = null, contexto = null, centros = [], ancho = 0, alto = 0, color = {};
+
+  // ---------- datos
+  function decodificar(b64) {
+    return new Promise((ok, mal) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas"); c.width = NC; c.height = NF;
+        const x = c.getContext("2d", { willReadFrequently: true });
+        x.drawImage(img, 0, 0);
+        const px = x.getImageData(0, 0, NC, NF).data, v = new Uint8Array(NC * NF);
+        for (let i = 0; i < v.length; i++) v[i] = px[4 * i];
+        ok(v);
+      };
+      img.onerror = mal;
+      img.src = "data:image/png;base64," + b64;
+    });
+  }
+  const cache = new Map();
+  function clasesDe(serie, k) {
+    const clave = serie + ":" + k;
+    if (!cache.has(clave)) {
+      if (cache.size > 40) cache.delete(cache.keys().next().value);
+      cache.set(clave, decodificar(D.series[serie][k].png));
+    }
+    return cache.get(clave);
+  }
+  const serieActual = () => estado.modo + "_" + estado.anio;
+  const semanaActual = () => D.series[serieActual()][estado.k];
+  const anios = (modo) => Object.keys(D.series).filter((s) => s.startsWith(modo + "_")).map((s) => +s.split("_")[1]).sort();
+  function celdasObservadas(entrada) {
+    if (!entrada.obs) return null;
+    const v = new Int32Array(entrada.obs.length); let acum = 0;
+    for (let i = 0; i < v.length; i++) { acum += entrada.obs[i]; v[i] = acum; }
+    return v;
+  }
+
+  // ---------- colores del tema
+  function leerColores() {
+    const cs = getComputedStyle(document.documentElement);
+    const hex = (n) => cs.getPropertyValue(n).trim();
+    const rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    color = { nombres: {}, rgb: {} };
+    ["--map-out", "--dept", "--urban", "--water", "--b-dept", "--b-muni", "--r1", "--r2", "--r3", "--r4", "--obs", "--obs-ring", "--ink", "--ink-2", "--panel", "--accent"]
+      .forEach((n) => { color.nombres[n] = hex(n); color.rgb[n] = rgb(hex(n)); });
+  }
+
+  // ---------- dibujo
+  function pintarRejilla() {
+    const img = gf.createImageData(NC, NF), px = img.data, c = estado.clases;
+    const paleta = [color.rgb["--dept"], color.rgb["--r1"], color.rgb["--r2"], color.rgb["--r3"], color.rgb["--r4"]];
+    const verContexto = $("ver-contexto").checked;
+    for (let i = 0; i < c.length; i++) {
+      const k = c[i];
+      if (k === 255) continue;
+      let col = paleta[k];
+      if (k === 0 && verContexto && contexto) {
+        if (contexto[i] === 1) col = color.rgb["--urban"]; else if (contexto[i] === 2) col = color.rgb["--water"];
+      }
+      px[4 * i] = col[0]; px[4 * i + 1] = col[1]; px[4 * i + 2] = col[2]; px[4 * i + 3] = 255;
+    }
+    gf.putImageData(img, 0, 0);
+  }
+  const ex = () => estado.escala * COS, ey = () => estado.escala;
+  function trazar(anillos, anchoLinea, col) {
+    g.lineWidth = anchoLinea; g.strokeStyle = col; g.lineJoin = "round";
+    g.beginPath();
+    for (const poligono of anillos) for (const a of poligono) {
+      g.moveTo(estado.tx + a[0] * ex(), estado.ty + a[1] * ey());
+      for (let i = 2; i < a.length; i += 2) g.lineTo(estado.tx + a[i] * ex(), estado.ty + a[i + 1] * ey());
+    }
+    g.stroke();
+  }
+  function dibujar() {
+    if (!estado.clases) return;
+    const dpr = window.devicePixelRatio || 1;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = color.nombres["--map-out"]; g.fillRect(0, 0, ancho, alto);
+    g.imageSmoothingEnabled = false;
+    g.drawImage(fuera, estado.tx, estado.ty, NC * ex(), NF * ey());
+    if ($("ver-limites").checked) trazar(D.contorno_municipios, 0.8, color.nombres["--b-muni"]);
+    trazar(D.contorno_departamento, 1.6, color.nombres["--b-dept"]);
+    if (estado.obs && $("ver-focos").checked) {
+      const r = Math.max(2.4, Math.min(estado.escala * 0.42, 6));
+      g.fillStyle = color.nombres["--obs"]; g.strokeStyle = color.nombres["--obs-ring"]; g.lineWidth = Math.min(1.5, r * 0.4);
+      for (let i = 0; i < estado.obs.length; i++) {
+        const id = estado.obs[i], x = estado.tx + ((id % NC) + 0.5) * ex(), y = estado.ty + (Math.floor(id / NC) + 0.5) * ey();
+        if (x < -8 || y < -8 || x > ancho + 8 || y > alto + 8) continue;
+        g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill(); g.stroke();
+      }
+    }
+    if ($("ver-limites").checked && estado.escala > 2.6) {
+      g.font = "500 11px Inter, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      for (const c of centros) {
+        const x = estado.tx + c.x * ex(), y = estado.ty + c.y * ey();
+        if (x < 0 || y < 0 || x > ancho || y > alto) continue;
+        g.lineWidth = 3; g.strokeStyle = color.nombres["--panel"]; g.strokeText(c.n, x, y);
+        g.fillStyle = color.nombres["--ink"]; g.fillText(c.n, x, y);
+      }
+    }
+    if (estado.sel !== null) {
+      const x = estado.tx + (estado.sel % NC) * ex(), y = estado.ty + Math.floor(estado.sel / NC) * ey();
+      g.lineWidth = 2; g.strokeStyle = color.nombres["--accent"];
+      g.strokeRect(x - 2, y - 2, ex() + 4, ey() + 4);
+    }
+    // barra de escala: 10, 20 o 50 km
+    const kmPorPx = KM_CELDA / estado.escala;
+    const km = [1, 2, 5, 10, 20, 50, 100].find((v) => v / kmPorPx >= 60) || 100;
+    const barra = $("escala"); barra.firstElementChild.textContent = km + " km"; barra.lastElementChild.style.width = (km / kmPorPx) + "px";
+  }
+  function encuadrar() {
+    const margen = 14;
+    estado.escala = Math.min((ancho - 2 * margen) / (NC * COS), (alto - 2 * margen) / NF);
+    estado.tx = (ancho - NC * ex()) / 2; estado.ty = (alto - NF * ey()) / 2;
+  }
+  function ajustarTamano() {
+    const marco = $("marco"), dpr = window.devicePixelRatio || 1;
+    const proporcion = NF / (NC * COS);
+    const previo = ancho ? { cx: (ancho / 2 - estado.tx) / ex(), cy: (alto / 2 - estado.ty) / ey(), rel: estado.escala * NC / ancho } : null;
+    ancho = marco.clientWidth;
+    alto = Math.round(Math.min(ancho * proporcion, Math.max(420, window.innerHeight * 0.78)));
+    lienzo.style.height = alto + "px";
+    lienzo.width = Math.round(ancho * dpr); lienzo.height = Math.round(alto * dpr);
+    if (previo) {
+      estado.escala = previo.rel * ancho / NC;
+      estado.tx = ancho / 2 - previo.cx * ex(); estado.ty = alto / 2 - previo.cy * ey();
+    } else encuadrar();
+    dibujar();
+  }
+  function zoom(factor, px, py) {
+    const minimo = Math.min(ancho / (NC * COS), alto / NF) * 0.7;
+    const nueva = Math.max(minimo, Math.min(40, estado.escala * factor));
+    const cx = (px - estado.tx) / ex(), cy = (py - estado.ty) / ey();
+    estado.escala = nueva;
+    estado.tx = px - cx * ex(); estado.ty = py - cy * ey();
+    dibujar();
+  }
+  function celdaEn(px, py) {
+    const col = Math.floor((px - estado.tx) / ex()), fila = Math.floor((py - estado.ty) / ey());
+    return (col < 0 || fila < 0 || col >= NC || fila >= NF) ? null : fila * NC + col;
+  }
+
+  // ---------- textos
+  function rango(k) {
+    const u = D.umbrales;
+    const umbral = (v) => { const p = 100 * v; return pct(v, p >= 1 ? (Math.abs(p - Math.round(p)) < 1e-9 ? 0 : 1) : (p >= 0.1 ? 1 : 2)); };
+    if (k === 0) return "menos de " + umbral(u[0]);
+    if (k === 4) return umbral(u[3]) + " o más";
+    return umbral(u[k - 1]) + " a " + umbral(u[k]);
+  }
+  function fechaLarga(e) {
+    const a = e.ini.split("-").map(Number), b = e.fin.split("-").map(Number);
+    const fin = b[2] + " de " + MESES[b[1] - 1] + " de " + b[0];
+    return a[1] === b[1] ? a[2] + " al " + fin : a[2] + " de " + MESES[a[1] - 1] + " al " + fin;
+  }
+  function leerCelda(id) {
+    const caja = $("lectura");
+    caja.textContent = "";
+    const poner = (etiqueta, valor, clase) => {
+      const s = document.createElement("span"), b = document.createElement("b");
+      b.textContent = valor; if (clase) b.className = clase;
+      s.append(etiqueta + " ", b); caja.append(s);
+    };
+    if (id === null || !estado.clases || estado.clases[id] === 255) {
+      const s = document.createElement("span");
+      s.textContent = "Pase el cursor o toque una celda del departamento para ver su riesgo.";
+      caja.append(s); return;
+    }
+    const k = estado.clases[id], fila = Math.floor(id / NC), col = id % NC;
+    poner("Riesgo", CLASES[k] + " (" + rango(k) + ")");
+    if (muni && muni[id] !== 255) poner("Municipio", nombre(D.municipios[muni[id]]) + ", prov. " + nombre(D.provincia_de_municipio[muni[id]]));
+    poner("Centro", (M.norte - (fila + 0.5) * M.celda).toFixed(4) + ", " + (M.oeste + (col + 0.5) * M.celda).toFixed(4), "mono");
+    if (estado.obs && estado.obs.indexOf(id) >= 0) poner("Esa semana", "hubo foco observado");
+  }
+  function actualizarPanel() {
+    const e = semanaActual(), total = e.cls.reduce((a, b) => a + b, 0), futuro = !e.obs;
+    $("t-semana").textContent = "Semana " + e.sem + " · " + fechaLarga(e);
+    $("t-modo").textContent = "Modo " + estado.modo + (futuro ? " · calendario" : " · con lo que se sabía antes de esa semana");
+    $("rot-semana").textContent = "Semana " + e.sem + " de " + e.anio;
+    const cifras = $("cifras"); cifras.textContent = "";
+    const cifra = (valor, texto) => {
+      const d = document.createElement("div"), b = document.createElement("b"), s = document.createElement("span");
+      d.className = "cifra"; b.textContent = valor; s.textContent = texto; d.append(b, s); cifras.append(d);
+    };
+    const altas = e.cls[3] + e.cls[4];
+    cifra(num(altas), "celdas en riesgo alto o muy alto (" + pct(altas / total, 2) + " del departamento)");
+    cifra(num(e.esp), "celdas con fuego esperadas");
+    if (!futuro) {
+      const nobs = e.obs.length;
+      cifra(num(nobs), "celdas con fuego observadas");
+      const enAltas = e.aciertos[3] + e.aciertos[4], enMod = enAltas + e.aciertos[2];
+      cifra(nobs ? pct(enMod / nobs, 0) : "—", "de las observadas cayó en riesgo moderado o mayor" + (nobs ? " (" + pct(enAltas / nobs, 0) + " en alto o muy alto)" : ""));
+    }
+    const aviso = $("aviso");
+    aviso.hidden = !e.aviso; aviso.textContent = e.aviso || "";
+    const lista = $("top"); lista.textContent = "";
+    e.top.forEach((t, i) => {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button";
+      const n = document.createElement("span"); n.className = "n"; n.textContent = (i + 1) + ".";
+      const lugar = document.createElement("span"); lugar.className = "lugar"; lugar.textContent = nombre(D.municipios[t[3]]);
+      const coord = document.createElement("small"); coord.className = "mono"; coord.textContent = t[0].toFixed(4) + ", " + t[1].toFixed(4);
+      lugar.append(coord);
+      const p = document.createElement("span"); p.className = "p"; p.textContent = pct(t[2], t[2] < 0.1 ? 1 : 0);
+      b.append(n, lugar, p);
+      b.addEventListener("click", () => {
+        const fila = Math.floor((M.norte - t[0]) / M.celda), col = Math.floor((t[1] - M.oeste) / M.celda);
+        estado.sel = fila * NC + col;
+        estado.escala = Math.max(estado.escala, 9);
+        estado.tx = ancho / 2 - (col + 0.5) * ex(); estado.ty = alto / 2 - (fila + 0.5) * ey();
+        lista.querySelectorAll("button").forEach((x) => x.removeAttribute("aria-current"));
+        b.setAttribute("aria-current", "true");
+        dibujar(); leerCelda(estado.sel);
+      });
+      li.append(b); lista.append(li);
+    });
+    $("ver-focos").disabled = futuro;
+  }
+  function pintarLeyenda() {
+    const ul = $("leyenda"); ul.textContent = "";
+    const tabla = D.clases_prueba[estado.modo] || [];
+    for (let k = 4; k >= 0; k--) {
+      const li = document.createElement("li"), i = document.createElement("i"), b = document.createElement("b"), s = document.createElement("span");
+      i.style.background = k === 0 ? "var(--dept)" : "var(--r" + k + ")";
+      b.textContent = CLASES[k];
+      const f = tabla[k] ? tabla[k].frecuencia_observada : null;
+      s.textContent = rango(k) + (f ? " · en la prueba ardió 1 de cada " + num(Math.round(1 / f)) : "");
+      li.append(i, b, s); ul.append(li);
+    }
+    const li = document.createElement("li"); li.className = "extra";
+    const foco = document.createElement("em"), p = document.createElement("span"); p.className = "punto";
+    foco.append(p, "Foco observado (VIIRS)");
+    li.append(foco); ul.append(li);
+  }
+  function pintarDesempeno() {
+    const ul = $("desempeno"), d = D.desempeno; ul.textContent = "";
+    const item = (t) => { const li = document.createElement("li"); li.textContent = t; ul.append(li); };
+    const a = D.anios_prueba;
+    if (d.gbm_operativo) item("Prueba " + a[0] + "–" + a[1] + ", modo operativo: el 5 % de celdas de mayor riesgo de cada semana contuvo el " + pct(d.gbm_operativo.captura_5, 0) + " de las celdas con fuego; el 10 %, el " + pct(d.gbm_operativo.captura_10, 0) + ".");
+    if (d.gbm_estacional) item("Modo estacional: " + pct(d.gbm_estacional.captura_5, 0) + " y " + pct(d.gbm_estacional.captura_10, 0) + ".");
+    if (d.provincia) item("El enfoque por provincia, con el mismo territorio señalado: " + pct(d.provincia.captura_5, 0) + " y " + pct(d.provincia.captura_10, 0) + ".");
+    if (d.gbm_operativo && d.provincia) item("Para capturar la mitad del fuego hay que señalar el " + pct(d.gbm_operativo.area_50, 1) + " del territorio con el modelo operativo y el " + pct(d.provincia.area_50, 1) + " por provincia.");
+  }
+
+  // ---------- flujo
+  async function mostrar() {
+    const serie = serieActual(), k = estado.k;
+    const clases = await clasesDe(serie, k);
+    if (serie !== serieActual() || k !== estado.k) return;       // ya se pidió otra semana
+    estado.clases = clases; estado.obs = celdasObservadas(semanaActual());
+    pintarRejilla(); dibujar(); actualizarPanel(); leerCelda(estado.sel);
+    try { localStorage.setItem("visor-incendios", JSON.stringify({ modo: estado.modo, anio: estado.anio, k: estado.k })); } catch (e) { /* sin almacenamiento */ }
+  }
+  function fijarSemana(k) {
+    const n = D.series[serieActual()].length;
+    estado.k = Math.max(0, Math.min(n - 1, k)); $("semana").value = estado.k;
+    $("fecha").value = semanaActual().ini;
+    mostrar();
+  }
+  function fijarAnio(anio, k) {
+    estado.anio = anio; $("anio").value = anio;
+    const serie = D.series[serieActual()];
+    $("semana").max = serie.length - 1;
+    if (k === undefined && estado.modo === "operativo" && (D.anios_seguimiento || []).includes(anio)) {
+      k = serie.length - 1;                                        // seguimiento: la semana más reciente
+    } else if (k === undefined) {                                  // por defecto, la semana de más riesgo esperado
+      k = 0; serie.forEach((e, i) => { if (e.esp > serie[k].esp) k = i; });
+    }
+    fijarSemana(k);
+  }
+  function fijarModo(modo, anio, k) {
+    estado.modo = modo;
+    $("modo-operativo").setAttribute("aria-pressed", modo === "operativo");
+    $("modo-estacional").setAttribute("aria-pressed", modo === "estacional");
+    const lista = anios(modo), sel = $("anio"); sel.textContent = "";
+    lista.forEach((a) => {
+      const o = document.createElement("option"); o.value = a;
+      o.textContent = a + (modo === "operativo"
+        ? ((D.anios_seguimiento || []).includes(a) ? " (seguimiento)" : "")
+        : (a > D.ultimo_anio_con_focos + 1 ? " (provisional)" : (a > D.ultimo_anio_con_focos ? " (calendario)" : "")));
+      sel.append(o);
+    });
+    pintarLeyenda();
+    fijarAnio(lista.includes(anio) ? anio : (lista.includes(estado.anio) ? estado.anio : lista[lista.length - 1]), k);
+  }
+  function irAFecha(texto) {
+    if (!texto) return;
+    for (const modo of [estado.modo, estado.modo === "operativo" ? "estacional" : "operativo"]) {
+      for (const a of anios(modo)) {
+        const k = D.series[modo + "_" + a].findIndex((e) => e.ini <= texto && texto <= e.fin);
+        if (k >= 0) { if (modo !== estado.modo) fijarModo(modo, a, k); else fijarAnio(a, k); return; }
+      }
+    }
+    const aviso = $("aviso"); aviso.hidden = false;
+    aviso.textContent = "No hay mapa para esa fecha. Con el proyecto puede generarlo: python -m incendios predecir --fecha " + texto;
+  }
+  function detener() {
+    if (estado.reproduciendo) { clearInterval(estado.reproduciendo); estado.reproduciendo = null; }
+    $("reproducir").textContent = "Reproducir"; $("reproducir").setAttribute("aria-pressed", "false");
+  }
+
+  // ---------- eventos
+  $("modo-operativo").addEventListener("click", () => { detener(); fijarModo("operativo"); });
+  $("modo-estacional").addEventListener("click", () => { detener(); fijarModo("estacional"); });
+  $("anio").addEventListener("change", (e) => { detener(); fijarAnio(+e.target.value); });
+  $("semana").addEventListener("input", (e) => fijarSemana(+e.target.value));
+  $("anterior").addEventListener("click", () => { detener(); fijarSemana(estado.k - 1); });
+  $("siguiente").addEventListener("click", () => { detener(); fijarSemana(estado.k + 1); });
+  $("reproducir").addEventListener("click", () => {
+    if (estado.reproduciendo) return detener();
+    $("reproducir").textContent = "Pausar"; $("reproducir").setAttribute("aria-pressed", "true");
+    estado.reproduciendo = setInterval(() => {
+      if (estado.k >= D.series[serieActual()].length - 1) return detener();
+      fijarSemana(estado.k + 1);
+    }, 700);
+  });
+  $("fecha").addEventListener("change", (e) => { detener(); irAFecha(e.target.value); });
+  ["ver-focos", "ver-limites", "ver-contexto"].forEach((id) => $(id).addEventListener("change", () => { pintarRejilla(); dibujar(); }));
+  $("acercar").addEventListener("click", () => zoom(1.6, ancho / 2, alto / 2));
+  $("alejar").addEventListener("click", () => zoom(1 / 1.6, ancho / 2, alto / 2));
+  $("encuadrar").addEventListener("click", () => { estado.sel = null; encuadrar(); dibujar(); leerCelda(null); });
+  lienzo.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = lienzo.getBoundingClientRect();
+    zoom(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  const dedos = new Map(); let arrastre = null, pellizco = 0, movido = false;
+  lienzo.addEventListener("pointerdown", (e) => {
+    lienzo.setPointerCapture(e.pointerId); dedos.set(e.pointerId, [e.clientX, e.clientY]);
+    arrastre = [e.clientX, e.clientY]; movido = false; lienzo.classList.add("arrastrando");
+    if (dedos.size === 2) { const p = [...dedos.values()]; pellizco = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]); }
+  });
+  lienzo.addEventListener("pointermove", (e) => {
+    const r = lienzo.getBoundingClientRect();
+    if (dedos.has(e.pointerId)) {
+      dedos.set(e.pointerId, [e.clientX, e.clientY]);
+      if (dedos.size === 2) {
+        const p = [...dedos.values()], d = Math.hypot(p[0][0] - p[1][0], p[0][1] - p[1][1]);
+        if (pellizco) zoom(d / pellizco, (p[0][0] + p[1][0]) / 2 - r.left, (p[0][1] + p[1][1]) / 2 - r.top);
+        pellizco = d; movido = true; return;
+      }
+      if (arrastre) {
+        const dx = e.clientX - arrastre[0], dy = e.clientY - arrastre[1];
+        if (Math.abs(dx) + Math.abs(dy) > 2) movido = true;
+        estado.tx += dx; estado.ty += dy; arrastre = [e.clientX, e.clientY]; dibujar();
+      }
+    } else if (e.pointerType === "mouse") leerCelda(celdaEn(e.clientX - r.left, e.clientY - r.top) ?? estado.sel);
+  });
+  function soltar(e) {
+    const r = lienzo.getBoundingClientRect();
+    if (dedos.has(e.pointerId) && !movido) {          // toque o clic sin arrastrar: seleccionar la celda
+      const id = celdaEn(e.clientX - r.left, e.clientY - r.top);
+      estado.sel = (id !== null && estado.clases && estado.clases[id] !== 255) ? id : null;
+      dibujar(); leerCelda(estado.sel);
+    }
+    dedos.delete(e.pointerId); pellizco = 0; arrastre = dedos.size ? [...dedos.values()][0] : null;
+    if (!dedos.size) lienzo.classList.remove("arrastrando");
+  }
+  lienzo.addEventListener("pointerup", soltar);
+  lienzo.addEventListener("pointercancel", soltar);
+  lienzo.addEventListener("dblclick", (e) => { const r = lienzo.getBoundingClientRect(); zoom(2, e.clientX - r.left, e.clientY - r.top); });
+  window.addEventListener("resize", ajustarTamano);
+  const temaCambio = () => { leerColores(); if (estado.clases) { pintarRejilla(); dibujar(); } };
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", temaCambio);
+  new MutationObserver(temaCambio).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  // ---------- arranque
+  (async function () {
+    leerColores();
+    [muni, contexto] = await Promise.all([decodificar(D.raster_municipio), decodificar(D.raster_contexto)]);
+    const sx = new Float64Array(D.municipios.length), sy = new Float64Array(D.municipios.length), n = new Float64Array(D.municipios.length);
+    for (let i = 0; i < muni.length; i++) if (muni[i] !== 255) { sx[muni[i]] += i % NC; sy[muni[i]] += Math.floor(i / NC); n[muni[i]]++; }
+    centros = D.municipios.map((m, i) => ({ n: nombre(m), x: sx[i] / n[i] + 0.5, y: sy[i] / n[i] + 0.5 })).filter((c) => isFinite(c.x));
+    pintarDesempeno();
+    $("nota-datos").textContent = "Los focos disponibles llegan hasta el " + D.ultima_fecha_focos.split("-").reverse().join("/") +
+      ". El calendario de " + D.anios_futuros[1] + " es provisional hasta cargar los focos de " + D.anios_futuros[0] + "." +
+      ((D.anios_seguimiento || []).length ? " El modo operativo de " + D.anios_seguimiento.join(" y ") + " es el seguimiento semanal: lo que el modelo dijo cada lunes y, cuando la semana ya pasó, los focos que hubo." : "") +
+      (D.fuentes_fijas ? " Se retiraron " + D.fuentes_fijas + " celdas con fuentes de calor fijas (hornos, antorchas de gas), que el satélite detecta todo el año y de noche." : "");
+    $("pie").textContent = "Generado el " + D.generado.split("-").reverse().join("/") + " con el proyecto incendios_cochabamba (python -m incendios visor). Celdas de " +
+      num(KM_CELDA * 1000, 0) + " m × " + num(M.celda * 111320 * COS, 0) + " m.";
+    ajustarTamano();
+    let guardado = null;
+    try { guardado = JSON.parse(localStorage.getItem("visor-incendios")); } catch (e) { /* sin almacenamiento */ }
+    if (guardado && D.series[guardado.modo + "_" + guardado.anio] && guardado.k < D.series[guardado.modo + "_" + guardado.anio].length) {
+      fijarModo(guardado.modo, guardado.anio, guardado.k);
+    } else {
+      const a = anios("operativo");
+      fijarModo("operativo", a[a.length - 1]);
+    }
+  })();
+})();
+</script>

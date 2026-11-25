@@ -21,6 +21,7 @@
  ],
  "focos_hasta": "2026-11-19",
  "capas": [
+  "caminos",
   "cobertura",
   "perdida_bosque",
   "poblacion",

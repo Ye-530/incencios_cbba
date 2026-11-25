@@ -43,8 +43,8 @@ CAPAS = {
         "anuales": ["quema"], "estaticas": [], "desde": 2001, "bandas_por_pedido": 8,
     },
     "perdida_bosque": {
-        "activo": "UMD/hansen/global_forest_change_2024_v1_12",
-        "descripcion": "Hansen Global Forest Change v1.12 (30 m): fracción de la celda que perdió bosque en el año",
+        "activo": "UMD/hansen/global_forest_change_2025_v1_13",
+        "descripcion": "Hansen Global Forest Change v1.13 (30 m): fracción de la celda que perdió bosque en el año",
         "anuales": ["perdida"], "estaticas": ["arboles_2000"], "desde": 2001, "bandas_por_pedido": 6,
     },
     "cobertura": {
@@ -59,7 +59,7 @@ CAPAS = {
         "anuales": ["poblacion"], "estaticas": [], "desde": 2015, "bandas_por_pedido": 8,
     },
 }
-ANIOS_HANSEN = (2001, 2024)
+ANIOS_HANSEN = (2001, 2025)
 
 
 def transformacion(malla):
@@ -206,7 +206,8 @@ class ClienteEE:
             col = (ee.ImageCollection(CAPAS["quemas"]["activo"])
                    .filterDate(f"{anio}-01-01", f"{anio + 1}-01-01").select("BurnDate"))
             # un compuesto pierde la proyección de origen: se le devuelve la de MODIS
-            quemado = col.max().gt(0).setDefaultProjection(col.first().projection())
+            # unmask(0): píxeles sin quema deben ser 0, no sin-dato (evita NaN en 3 variables)
+            quemado = col.max().gt(0).unmask(0).setDefaultProjection(col.first().projection())
             return self._a_malla(quemado, malla, media)
         if nombre == "perdida_bosque":
             gfc = ee.Image(CAPAS["perdida_bosque"]["activo"])
@@ -214,7 +215,8 @@ class ClienteEE:
             if banda == "arboles_2000":
                 return self._a_malla(gfc.select("treecover2000").divide(100).updateMask(tierra), malla, media)
             anio = int(banda.rsplit("_", 1)[1])
-            return self._a_malla(gfc.select("lossyear").eq(anio - 2000).updateMask(tierra), malla, media)
+            # unmask(0): píxeles de tierra sin pérdida ese año → 0, no sin-dato (evita fuga de futuro)
+            return self._a_malla(gfc.select("lossyear").eq(anio - 2000).updateMask(tierra).unmask(0), malla, media)
         if nombre == "cobertura":
             variable, anio = banda.rsplit("_", 1)
             anio = int(anio)
@@ -228,7 +230,7 @@ class ClienteEE:
             anio = int(banda.rsplit("_", 1)[1])
             img = (ee.ImageCollection(CAPAS["poblacion"]["activo"]).filter(ee.Filter.eq("country", "BOL"))
                    .filter(ee.Filter.eq("year", anio)).first().select("population"))
-            return self._a_malla(img, malla, ee.Reducer.sum())        # suma: personas por celda
+            return self._a_malla(img.unmask(0), malla, ee.Reducer.sum())   # suma: personas por celda; unmask(0): sin población = 0
         raise KeyError(nombre)
 
     def pixeles(self, nombre, bandas, malla):

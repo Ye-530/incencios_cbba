@@ -51,7 +51,7 @@ from incendios.rasters import archivos_de
 from incendios.rutas import Rutas
 from incendios.malla import malla_cochabamba, rasterizar_geometria
 
-AGENTE = {"User-Agent": "Mozilla/5.0 (proyecto incendios Cochabamba)"}
+AGENTE = {"User-Agent": "IncendiosCochabamba/2.0 (investigacion forestal; oliverzy530@gmail.com)"}
 RECUADRO_BOLIVIA = (-69.7, -23.0, -57.4, -9.6)       # oeste, sur, este, norte
 COLUMNAS_FOCOS = ["latitude", "longitude", "bright_ti4", "scan", "track", "acq_date", "acq_time",
                   "satellite", "instrument", "confidence", "version", "bright_ti5", "frp", "daynight", "type"]

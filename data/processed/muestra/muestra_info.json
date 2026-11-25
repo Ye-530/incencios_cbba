@@ -74,7 +74,10 @@
    "mb_v11_conversion3",
    "mb_v11_agro",
    "pob_log",
-   "pob_v11_log"
+   "pob_v11_log",
+   "dist_via_km",
+   "dist_huella_km",
+   "vias_km_km2"
   ],
   "operativo": [
    "lc_arbol",
@@ -182,7 +185,10 @@
    "mb_v11_conversion3",
    "mb_v11_agro",
    "pob_log",
-   "pob_v11_log"
+   "pob_v11_log",
+   "dist_via_km",
+   "dist_huella_km",
+   "vias_km_km2"
   ]
  },
  "grupos": {
@@ -274,6 +280,11 @@
    "poblacion": [
     "pob_log",
     "pob_v11_log"
+   ],
+   "caminos": [
+    "dist_via_km",
+    "dist_huella_km",
+    "vias_km_km2"
    ]
   },
   "operativo": {
@@ -404,6 +415,11 @@
    "poblacion": [
     "pob_log",
     "pob_v11_log"
+   ],
+   "caminos": [
+    "dist_via_km",
+    "dist_huella_km",
+    "vias_km_km2"
    ]
   }
  },
@@ -447,9 +463,9 @@
    "perdida_bosque": {
     "anios": [
      2001,
-     2024
+     2025
     ],
-    "fuente": "UMD/hansen/global_forest_change_2024_v1_12"
+    "fuente": "UMD/hansen/global_forest_change_2025_v1_13"
    },
    "cobertura": {
     "anios": [
@@ -464,6 +480,10 @@
      2030
     ],
     "fuente": "WorldPop/GP/100m/R2025A/v1/pop"
+   },
+   "caminos": {
+    "anios": "fija",
+    "fuente": "OpenStreetMap (API Overpass)"
    }
   },
   "huella": {
@@ -489,6 +509,7 @@
    ],
    "focos_hasta": "2026-11-19",
    "capas": [
+    "caminos",
     "cobertura",
     "perdida_bosque",
     "poblacion",

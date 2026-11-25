@@ -1,5 +1,6 @@
 """Despliegue: de una fecha a un mapa de riesgo y a la lista de lugares con más riesgo."""
 import json
+from datetime import timedelta
 from pathlib import Path
 
 import joblib
@@ -11,7 +12,7 @@ from .flujo import huellas_distintas
 from .evaluacion import clases_de_riesgo
 from .geotiff import escribir_geotiff
 from .graficos import CLASES
-from .tiempo import info_semana, inicio_semana, semana_de_fecha
+from .tiempo import info_semana, semana_de_fecha
 from .variables import ANIOS_HISTORIAL, REGIMENES
 
 
@@ -108,6 +109,11 @@ def predecir(ctx, fecha, modo="estacional", modelo=None):
         if ctx.dias_obs[semana - 1] < config.MIN_DIAS_OBSERVADOS:
             avisos.append(f"La semana anterior tuvo solo {int(ctx.dias_obs[semana - 1])} días de satélite: "
                           f"la actividad reciente de fuego está subestimada.")
+        vispera = info["inicio"] - timedelta(days=1)
+        if str(ultimo) < str(vispera):
+            avisos.append(f"Los focos llegan hasta el {ultimo} y la semana empieza el {info['inicio']}: la "
+                          f"actividad reciente de fuego está incompleta. Baje los focos nuevos "
+                          f"(python -m incendios descargar --que focos) para una predicción mejor.")
         X = c.matriz(semana, "operativo")
     elif info["anio"] - 1 > c.anio_ultimo_completo:
         avisos.append(f"Aún no hay focos de {info['anio'] - 1}: se usó el historial hasta "

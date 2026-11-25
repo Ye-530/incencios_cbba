@@ -1,5 +1,4 @@
 """Utilidades compartidas por las pruebas."""
-import numpy as np
 import pytest
 
 from incendios.rutas import Rutas

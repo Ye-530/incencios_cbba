@@ -15,6 +15,9 @@ PARAMETROS_POWER = ("T2M_MAX", "T2M_MIN", "RH2M", "WS2M", "PRECTOTCORR", "GWETTO
 _COLUMNA_POWER = {"T2M_MAX": "temp_max", "T2M_MIN": "temp_min", "RH2M": "humedad_rel", "WS2M": "viento_vel",
                   "PRECTOTCORR": "precipitacion", "GWETTOP": "humedad_suelo_sup", "GWETROOT": "humedad_suelo_raiz"}
 FUENTES_FIRMS = ("VIIRS_SNPP_SP", "VIIRS_SNPP_NRT", "VIIRS_NOAA20_SP", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT")
+# Días por consulta a la API de área de FIRMS. La documentación ha dicho 10; se usa 5 para quedar del
+# lado seguro con los productos de archivo (SP): solo cuesta el doble de pedidos, lejos del límite de
+# 5.000 cada 10 minutos. Si el servidor rechaza los pedidos, bájelo; si acepta más, se puede subir.
 MAX_DIAS_FIRMS = 5
 
 

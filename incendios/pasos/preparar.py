@@ -5,9 +5,7 @@ Construye la malla de 500 m, las variables y la muestra caso-control de 2015 a 2
     python -m incendios preparar
 """
 import argparse
-import sys
 import time
-from pathlib import Path
 
 
 from incendios import config, flujo

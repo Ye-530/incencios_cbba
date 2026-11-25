@@ -11,16 +11,18 @@
   0.01
  ],
  "celdas_por_clase": {
-  "Muy bajo": 80777,
-  "Bajo": 56930,
-  "Moderado": 18273,
-  "Alto": 24659,
-  "Muy alto": 4433
+  "Muy bajo": 87495,
+  "Bajo": 52553,
+  "Moderado": 16684,
+  "Alto": 21898,
+  "Muy alto": 6442
  },
- "celdas_esperadas_con_fuego": 275.87322998046875,
- "probabilidad_maxima": 0.018738392740488052,
+ "celdas_esperadas_con_fuego": 286.9687194824219,
+ "probabilidad_maxima": 0.027279114350676537,
  "avisos": [
-  "El modelo se entrenó con otros archivos de clima, relieve, cobertura o capas extra que los que hay ahora: vuelva a entrenar (python -m incendios entrenar) para que modelo y datos coincidan.",
+  "La capa quemas llega hasta 2025 y para 2027 lo ideal sería 2026: actualícela con: python -m incendios descargar --que capas",
+  "La capa perdida_bosque llega hasta 2025 y para 2027 lo ideal sería 2026: actualícela con: python -m incendios descargar --que capas",
+  "La capa cobertura llega hasta 2025 y para 2027 lo ideal sería 2026: actualícela con: python -m incendios descargar --que capas",
   "Aún no hay focos de 2026: se usó el historial hasta 2025. Actualice los focos para una predicción mejor."
  ]
 }

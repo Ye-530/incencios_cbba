@@ -164,8 +164,8 @@ Con las claves de cada servicio, el proyecto baja datos más finos y los usa com
    después.
 
 Partes sueltas: `--que clima_era5`, `capas`, `caminos`, `focos`; sin cuenta, `--que teselas` (relieve
-y cobertura que faltan: hoy el relieve cubre el 68 % del departamento) y `--que clima` (NASA POWER en
-su malla nativa).
+y cobertura que falten: con las teselas ya bajadas a `data/external/`, el relieve cubre todo el
+departamento, antes solo el 68 %) y `--que clima` (NASA POWER en su malla nativa).
 
 Cómo entran al modelo, sin usar información del futuro: para predecir un año se usan quemas,
 deforestación y uso del suelo **del año anterior o antes**, la población estimada de ese año y los
@@ -174,9 +174,11 @@ retraso), se usa su último año y la predicción lo avisa. ERA5-Land se publica
 retraso, así que el modo operativo usa el clima hasta el martes anterior, igual al entrenar que al
 predecir.
 
-Las descargas **no se pudieron ejecutar** donde se construyó el proyecto (no había internet). Lo que no
-toca la red está probado, incluido lo que se hace con las respuestas de cada servidor; revise la salida
-la primera vez.
+Estado actual (25 de noviembre de 2026): las descargas **ya se ejecutaron** y los modelos de `models/`
+están entrenados con ellas: clima ERA5-Land 2012–2026 (703 series de 0,1°), las cuatro capas de Earth
+Engine hasta 2025 (población hasta 2030), caminos de OpenStreetMap, las teselas de relieve que faltaban
+y los focos de NOAA-20 desde el 2 de noviembre de 2026. `models/huella.json` dice exactamente con qué
+archivos se entrenó; si `predecir` avisa que los datos cambiaron, reentrene.
 
 ### Comparar corridas
 
@@ -235,9 +237,13 @@ guardar claves en archivos.
   `reports/tablas/auditoria_fuentes_fijas.csv`; los umbrales, en `incendios/config.py`.
 - El modo estacional no sabe si el año será seco o húmedo: acierta dónde y en qué semanas, pero el
   nivel general puede quedar por encima o por debajo según el año.
-- El clima NASA POWER tiene celdas de unos 55 km: sirve para saber **cuándo**, no **dónde**. ERA5-Land
-  (11 km) mejora eso cuando se baja; sigue siendo mucho más grueso que la celda de 500 m.
-- La cobertura de suelo es de 2021 y el relieve falta en el este del departamento.
+- El modelo actual usa clima ERA5-Land, con celdas de unos 11 km: sirve para saber **cuándo**, no
+  **dónde**, y sigue siendo mucho más grueso que la celda de 500 m. Sin ese archivo, el proyecto vuelve a
+  NASA POWER (celdas de unos 55 km).
+- La cobertura de suelo de WorldCover es de 2021 (el uso del suelo año por año viene de MapBiomas). El
+  relieve cubre todo el departamento desde que se bajaron las teselas que faltaban.
+- El fuego en la región depende sobre todo de la actividad humana: en la importancia por permutación el
+  clima aporta poco frente al historial de fuego, la época del año y el fuego reciente.
 
 ## Pruebas
 

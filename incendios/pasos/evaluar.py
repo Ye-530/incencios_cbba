@@ -8,8 +8,6 @@ validación 2022–2023 (comparar algoritmos) y prueba 2024–2025 (resultado fi
 import argparse
 import json
 import re
-import sys
-from pathlib import Path
 
 
 import joblib
@@ -22,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from incendios import config, evaluacion as ev, flujo, graficos as g, metricas
-from incendios.tiempo import info_semana, inicio_semana, semana_de_fecha
+from incendios.tiempo import info_semana, inicio_semana
 
 ETIQUETAS = {
     "gbm_operativo": "Operativo (500 m)",
@@ -207,7 +205,7 @@ def escribir_resultados(ctx, t_val, t_pru, clases, desg, imp, ablacion_t, series
                                 "captura_10": "pct1", "area_50": "pct1"}, TITULOS_MD), ""]
     if ablacion_t is not None:
         t = ablacion_t.reset_index().rename(columns={"modelo": "variante"})
-        partes += [f"## Ablación (validación): el modelo operativo sin cada grupo de variables", "",
+        partes += ["## Ablación (validación): el modelo operativo sin cada grupo de variables", "",
                    ev.tabla_md(t[["variante", "pr_auc", "cambio_pr_auc", "captura_5", "cambio_captura_5", "captura_10"]],
                                {"pr_auc": "dec3", "cambio_pr_auc": "dec3", "captura_5": "pct1",
                                 "cambio_captura_5": "pct1", "captura_10": "pct1"},

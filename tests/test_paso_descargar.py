@@ -2,7 +2,6 @@
 from datetime import date
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -10,7 +9,7 @@ from incendios import credenciales, era5
 from incendios.pasos import descargar as dd
 from incendios.rutas import Rutas
 from tests.test_actualizacion import MALLA, MASCARA
-from tests.test_era5 import LAT, LON, cubos_sinteticos, escribir_nc, segundos
+from tests.test_era5 import cubos_sinteticos, escribir_nc, segundos
 
 
 

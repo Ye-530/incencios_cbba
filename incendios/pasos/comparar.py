@@ -10,7 +10,6 @@ tabla en <despues>/comparacion.md y comparacion.csv. Para comparar a mano con y 
 """
 import argparse
 import json
-import sys
 from pathlib import Path
 
 

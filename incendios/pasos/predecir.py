@@ -8,8 +8,6 @@ Cada predicción deja en reports/mapas/: GeoTIFF de probabilidad y de clase (par
 PNG, CSV con las 100 celdas de mayor riesgo (latitud, longitud, municipio) y un resumen.
 """
 import argparse
-import sys
-from pathlib import Path
 
 
 import pandas as pd

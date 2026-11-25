@@ -44,6 +44,7 @@ mientras construía. Cada una dice qué se decidió, por qué y qué cuesta si r
    teselas que faltan, el clima POWER en su malla nativa y los focos de FIRMS. *Por qué:* pediste datos
    de mejor calidad y el entorno donde se construyó no tenía internet. *Si falla:* solo están probadas
    las direcciones y el formato de las tablas; hay que revisar su salida la primera vez.
+   *Actualización (25 de noviembre de 2026):* las descargas ya corrieron (decisión 27).
 8. **Satélite configurable y huella de los datos.** `PATRON_FOCOS` permite pasar a NOAA-20 sin tocar
    el código, y cada modelo guarda qué datos y qué versión de scikit-learn usó, para avisar si se
    predice con otros. Sin costo.
@@ -142,18 +143,43 @@ mientras construía. Cada una dice qué se decidió, por qué y qué cuesta si r
 - Todos los modelos pasan por `ColumnasVacias`, porque scikit-learn 1.9.1 falla con columnas sin datos
   (relieve ausente en partes del departamento).
 
+## Revisión del 25 de noviembre de 2026
+
+27. **Las descargas ya corrieron y el modelo de `models/` está entrenado con todo.** ERA5-Land completo
+    2012–2026 (703 series), quemas MODIS, pérdida de bosque Hansen y MapBiomas hasta 2025, WorldPop
+    hasta 2030, caminos de OpenStreetMap, las 12 teselas de relieve y los focos de NOAA-20. El relieve
+    pasó de cubrir el 68 % del departamento al 100 %. La auditoría (`auditar`) se volvió a correr con
+    estos datos; antes sus tablas y figuras seguían describiendo el estado anterior.
+28. **El modelo final es un solo GBM por modo, no un promedio de tres semillas.** Un resumen del proyecto
+    decía que se promediaban tres entrenamientos con distinta semilla; el código entrena un
+    `HistGradientBoostingClassifier` con `SEMILLA = 42` por régimen (`incendios/pasos/modelar.py`). Las
+    cifras de `RESULTADOS.md` corresponden a ese modelo único. Promediar semillas es una mejora posible
+    (triplica el tiempo de `modelar`), no algo ya hecho.
+29. **FIRMS: 5 días por consulta.** El código ya pedía tramos de 5 días; dos pruebas esperaban 10 y
+    fallaban. Se dejó 5 (conservador; la documentación de la API ha dicho 10) y las pruebas siguen a la
+    constante `MAX_DIAS_FIRMS`.
+30. **El modo operativo avisa si los focos no llegan al domingo previo.** Antes, con el registro de
+    focos cortado a mitad de la semana anterior, la predicción salía sin aviso aunque el "fuego reciente"
+    estuviera incompleto (el aviso de días de satélite solo saltaba con menos de 4 días).
+31. **La auditoría entiende ERA5-Land.** Dibujaba celdas MERRA-2 de 0,5° × 0,625° para cualquier clima y
+    tenía títulos fijos ("cuatro de cada diez focos caen donde falta el relieve"); ahora usa el tamaño
+    de celda de la fuente, títulos calculados y documenta el salto de lluvia de 2020 con el archivo
+    POWER aunque el modelo use ERA5-Land.
+32. **Los mapas de ejemplo de `reports/mapas/` se regeneraron.** El estacional de 2027 se había generado
+    con un modelo que no coincidía con los datos (su resumen lo avisaba).
+
 ## Pendientes menores
 
-- Revisar la salida de la primera descarga real: años de cada capa (`--diagnostico`) y que las
-  fracciones de uso del suelo sumen cerca de 1 en el departamento.
 - El modelo no usa todavía las coberturas de MapBiomas para recalcular la distancia a cultivos ni a
   zonas urbanas (esas siguen saliendo de WorldCover 2021).
-
-- La búsqueda de variantes del modelo no se repitió tras retirar las fuentes fijas; afectan al 0,3 %
-  de los casos.
-- El mapa PNG del paso 05 no dibuja el contorno del departamento ni los municipios.
-- En el teléfono, la leyenda del visor queda debajo de la lista de las 10 celdas.
+- La búsqueda de variantes del modelo (`modelar --busqueda`) no se repitió con los datos mejorados;
+  `models/seleccion.json` conserva la variante `clima_compacto` elegida con NASA POWER.
+- El mapa PNG de `predecir` no dibuja el contorno del departamento ni los municipios.
 - La importancia por variable usa una sola repetición; la de grupos usa más.
+- El agente de usuario de las descargas (`AGENTE`, en `incendios/pasos/descargar.py`) lleva un correo
+  personal, como pide la etiqueta de Overpass; cámbielo si el proyecto cambia de responsable.
+- `data/processed/muestra/muestra_X.npy` (1 GB) viaja por Git LFS aunque `preparar` lo rehace en minutos;
+  la cuota gratuita de LFS en GitHub es de 1 GB al mes, así que conviene sacarlo del repositorio.
 
 ## Revisión
 

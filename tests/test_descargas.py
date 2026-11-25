@@ -96,15 +96,23 @@ def test_tabla_de_power_tiene_el_mismo_esquema_que_el_archivo_original():
     assert t["provincia"].unique().tolist() == ["celda_-17.5_-66.25"]
 
 
-def test_url_de_firms_para_un_recuadro_y_diez_dias():
-    url = descargas.url_firms("CLAVE", "VIIRS_NOAA20_SP", (-69.7, -23.0, -57.4, -9.6), "2024-09-01", 10)
+def test_url_de_firms_para_un_recuadro_y_el_maximo_de_dias():
+    maximo = descargas.MAX_DIAS_FIRMS
+    url = descargas.url_firms("CLAVE", "VIIRS_NOAA20_SP", (-69.7, -23.0, -57.4, -9.6), "2024-09-01", maximo)
     assert url == ("https://firms.modaps.eosdis.nasa.gov/api/area/csv/CLAVE/VIIRS_NOAA20_SP/"
-                   "-69.7,-23.0,-57.4,-9.6/10/2024-09-01")
-    with pytest.raises(ValueError, match="10"):
-        descargas.url_firms("CLAVE", "VIIRS_NOAA20_SP", (-69.7, -23.0, -57.4, -9.6), "2024-09-01", 11)
+                   f"-69.7,-23.0,-57.4,-9.6/{maximo}/2024-09-01")
+    with pytest.raises(ValueError, match=str(maximo)):
+        descargas.url_firms("CLAVE", "VIIRS_NOAA20_SP", (-69.7, -23.0, -57.4, -9.6), "2024-09-01", maximo + 1)
+    with pytest.raises(ValueError):
+        descargas.url_firms("CLAVE", "VIIRS_NOAA20_SP", (-69.7, -23.0, -57.4, -9.6), "2024-09-01", 0)
 
 
-def test_tramos_de_diez_dias_cubren_el_periodo_sin_solaparse():
-    tramos = descargas.tramos("2024-01-01", "2024-01-25")
-    assert tramos == [("2024-01-01", 10), ("2024-01-11", 10), ("2024-01-21", 5)]
+def test_tramos_cubren_el_periodo_sin_solaparse_ni_pasar_el_maximo():
+    tramos = descargas.tramos("2024-01-01", "2024-01-25")            # 25 días
+    assert all(1 <= n <= descargas.MAX_DIAS_FIRMS for _, n in tramos)
+    assert sum(n for _, n in tramos) == 25
+    assert tramos[0] == ("2024-01-01", descargas.MAX_DIAS_FIRMS)
+    inicios = [pd.Timestamp(f) for f, _ in tramos]
+    assert all(b == a + pd.Timedelta(days=n) for (a, b), (_, n) in zip(zip(inicios, inicios[1:]), tramos))
+    assert descargas.tramos("2024-01-01", "2024-01-25", dias=10) == [("2024-01-01", 10), ("2024-01-11", 10), ("2024-01-21", 5)]
     assert descargas.tramos("2024-03-05", "2024-03-05") == [("2024-03-05", 1)]

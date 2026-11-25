@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from incendios import caminos, capas
-from incendios.malla import KM_POR_GRADO_LAT, KM_POR_GRADO_LON_ECUADOR, Malla
+from incendios.malla import KM_POR_GRADO_LON_ECUADOR, Malla
 
 MALLA = Malla(oeste=-66.0, norte=-17.0, celda=0.005, ncols=20, nfilas=10)
 C = MALLA.celda

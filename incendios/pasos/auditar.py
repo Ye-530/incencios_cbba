@@ -6,8 +6,6 @@ Mide la calidad de cada fuente y deja tablas y figuras en reports/.
 """
 import argparse
 import json
-import sys
-from pathlib import Path
 
 
 import matplotlib
@@ -22,6 +20,8 @@ from matplotlib.patches import Rectangle
 from incendios import clima as mod_clima
 from incendios import config, flujo, focos as mod_focos, graficos as g
 from incendios.tiempo import inicio_semana
+
+ERA5_PASO = 0.1          # grados: tamaño de celda de ERA5-Land (incendios/era5.py)
 
 
 def tabla_focos(ctx, tablas):
@@ -109,6 +109,7 @@ def figura_anio_mes(por_mes, ruta):
 
 def figura_cobertura(ctx, focos_depto, est, limite, tabla, ruta):
     m = ctx.malla
+    periodo = f"{focos_depto['fecha'].min().year}–{focos_depto['fecha'].max().year}"
     cuenta = np.bincount(focos_depto["celda"].to_numpy(), minlength=m.nfilas * m.ncols).reshape(m.forma)
     bloque = 5
     nf, nc = m.nfilas // bloque, m.ncols // bloque
@@ -125,7 +126,8 @@ def figura_cobertura(ctx, focos_depto, est, limite, tabla, ruta):
     g.contornos(ax, limite, color=g.TINTA_2, ancho=0.9)
     lon, lat = m.centros()
     con_dem = np.isfinite(est["elev_media"])
-    ax.contour(lon, lat, con_dem.astype(float), levels=[0.5], colors=[g.NARANJA], linewidths=1.6, zorder=4)
+    if (~con_dem & ctx.mascara).any():       # el borde del relieve solo tiene sentido si falta en alguna parte
+        ax.contour(lon, lat, con_dem.astype(float), levels=[0.5], colors=[g.NARANJA], linewidths=1.6, zorder=4)
     con_lc = np.isfinite(est["lc_arbol"])
     if (~con_lc & ctx.mascara).any():
         lat_limite = lat[np.flatnonzero(con_lc.any(axis=1)).max()] - m.celda / 2
@@ -140,39 +142,55 @@ def figura_cobertura(ctx, focos_depto, est, limite, tabla, ruta):
             bbox={"facecolor": g.SUPERFICIE, "edgecolor": "none", "alpha": 0.85, "pad": 2})
     barra = fig.colorbar(img, ax=ax, shrink=0.55, pad=0.02, ticks=limites[:-1])
     barra.outline.set_visible(False)
-    barra.set_label("Detecciones 2012–2025 por bloque de 2,5 km")
-    g.titulos(ax, "Cuatro de cada diez focos caen donde falta el relieve",
-              "Densidad de focos 2012–2025 y zona cubierta por las teselas disponibles")
+    barra.set_label(f"Detecciones {periodo} por bloque de 2,5 km")
+    sin_relieve = 100.0 - float(tabla.iloc[0].focos_cubiertos_pct)
+    if sin_relieve >= 1.0:
+        titulo = f"El {sin_relieve:.0f} % de los focos cae donde falta el relieve"
+    else:
+        titulo = "Las teselas de relieve cubren todo el departamento"
+    g.titulos(ax, titulo, f"Densidad de focos {periodo} y zona cubierta por las teselas disponibles")
     return g.guardar(fig, ruta)
 
 
 def figura_clima(ctx, puntos, limite, provincias_gj, ruta):
+    """Dónde está el clima: celdas MERRA-2 de ~55 × 65 km con POWER, o la malla de 0,1° de ERA5-Land."""
+    power = ctx.clima.fuente == mod_clima.FUENTE_POWER
+    dlon, dlat = (mod_clima.MERRA_DLON, mod_clima.MERRA_DLAT) if power else (ERA5_PASO, ERA5_PASO)
     fig, ax = plt.subplots(figsize=(8.0, 7.2))
     g.preparar_mapa(ax, ctx.malla, recorte=(-67.35, -64.0, -18.9, -15.6))
     g.contornos(ax, provincias_gj, color=g.EJE, ancho=0.6)
     g.contornos(ax, limite, color=g.TINTA_2, ancho=1.0)
     for fila in ctx.clima.tabla.itertuples():
-        x0, y0 = fila.lon_c - mod_clima.MERRA_DLON / 2, fila.lat_c - mod_clima.MERRA_DLAT / 2
-        ax.add_patch(Rectangle((x0, y0), mod_clima.MERRA_DLON, mod_clima.MERRA_DLAT, facecolor=g.NARANJA,
-                               alpha=0.10, edgecolor="none", zorder=1))
-        ax.add_patch(Rectangle((x0, y0), mod_clima.MERRA_DLON, mod_clima.MERRA_DLAT, facecolor="none",
-                               edgecolor=g.NARANJA, linewidth=1.2, zorder=4))
+        x0, y0 = fila.lon_c - dlon / 2, fila.lat_c - dlat / 2
+        ax.add_patch(Rectangle((x0, y0), dlon, dlat, facecolor=g.NARANJA, alpha=0.10, edgecolor="none", zorder=1))
+        ax.add_patch(Rectangle((x0, y0), dlon, dlat, facecolor="none", edgecolor=g.NARANJA,
+                               linewidth=1.2 if power else 0.4, zorder=4))
         n = fila.provincias.count(",") + 1
-        if n > 1:
+        if power and n > 1:
             ax.text(fila.lon_c, y0 + 0.03, f"{n} provincias,\nla misma serie", ha="center", va="bottom",
                     fontsize=8, color=g.TINTA, zorder=6)
-    ax.scatter(puntos["lon"], puntos["lat"], s=34, color=g.AZUL, edgecolor=g.SUPERFICIE, linewidth=1.2, zorder=5)
-    g.titulos(ax, f"{len(puntos)} puntos de clima, pero solo {len(ctx.clima.tabla)} series distintas",
-              "Cada recuadro es una celda de ~55 × 65 km del reanálisis que usa NASA POWER")
-    ax.legend(handles=[
-        plt.Line2D([], [], linestyle="none", marker="o", markersize=6, markerfacecolor=g.AZUL,
-                   markeredgecolor=g.SUPERFICIE, label="Punto consultado (centro de provincia)"),
-        Rectangle((0, 0), 1, 1, facecolor="none", edgecolor=g.NARANJA, linewidth=1.2, label="Celda de clima"),
-    ], loc="lower left", fontsize=8.5)
+    if power:
+        ax.scatter(puntos["lon"], puntos["lat"], s=34, color=g.AZUL, edgecolor=g.SUPERFICIE, linewidth=1.2, zorder=5)
+        titulo = f"{len(puntos)} puntos de clima, pero solo {len(ctx.clima.tabla)} series distintas"
+        subtitulo = "Cada recuadro es una celda de ~55 × 65 km del reanálisis que usa NASA POWER"
+        punto = "Punto consultado (centro de provincia)"
+    else:
+        titulo = f"{len(ctx.clima.tabla)} series de clima ERA5-Land, una por celda de 0,1° (~11 km)"
+        subtitulo = "El modelo interpola a cada celda de 500 m las cuatro series más cercanas"
+        punto = None
+    g.titulos(ax, titulo, subtitulo)
+    piezas = [Rectangle((0, 0), 1, 1, facecolor="none", edgecolor=g.NARANJA, linewidth=1.2, label="Celda de clima")]
+    if punto:
+        piezas.insert(0, plt.Line2D([], [], linestyle="none", marker="o", markersize=6, markerfacecolor=g.AZUL,
+                                    markeredgecolor=g.SUPERFICIE, label=punto))
+    ax.legend(handles=piezas, loc="lower left", fontsize=8.5)
     return g.guardar(fig, ruta)
 
 
 def figura_suelo(crudo, ruta):
+    """El salto de lluvia de junio de 2020 en NASA POWER y su efecto en la humedad del suelo (solo POWER)."""
+    if mod_clima.fuente_de(crudo) != mod_clima.FUENTE_POWER:
+        return None
     provincia = "Cercado" if "Cercado" in set(crudo["provincia"]) else crudo["provincia"].iloc[0]
     d = crudo[crudo["provincia"] == provincia].set_index("fecha")["humedad_suelo_raiz"]
     d = d[d > -900]
@@ -213,6 +231,8 @@ def main(argv=None):
         tablas / "auditoria_fuentes_fijas.csv", index=False, encoding="utf-8-sig")
     dias, rachas, pocas = tabla_apagones(ctx, tablas)
     crudo, puntos, lluvia, anual = auditoria_clima(ctx, tablas)
+    # el problema de lluvia de 2020 es de NASA POWER: se documenta con ese archivo aunque el modelo use ERA5-Land
+    power = mod_clima.cargar_clima(ctx.rutas.clima_power) if ctx.rutas.clima_power.exists() else crudo
     est, cobertura = cobertura_capas(ctx, focos_depto, tablas)
 
     todas = pd.read_csv(ctx.rutas.fuegos_originales / "nasa_viirs_cochabamba_historico_2012_2025.csv") \
@@ -247,6 +267,7 @@ def main(argv=None):
         "rachas_sin_satelite": [[str(r.desde.date()), str(r.hasta.date()), int(r.dias)]
                                 for r in rachas.itertuples() if r.dias >= 2 or r.desde.month in (7, 8, 9, 10, 11)],
         "semanas_con_pocos_dias": pocas,
+        "fuente_clima": ctx.clima.fuente,
         "puntos_clima": int(len(puntos)),
         "series_clima_distintas": int(len(ctx.clima.tabla)),
         "lluvia_maxima_registrada_mm": float(crudo["precipitacion"].max()),
@@ -262,7 +283,7 @@ def main(argv=None):
     figura_anio_mes(por_mes, figuras / "aud_focos_anio_mes.png")
     figura_cobertura(ctx, focos_depto, est, limite, cobertura, figuras / "aud_cobertura_capas.png")
     figura_clima(ctx, puntos, limite, provincias_gj, figuras / "aud_clima_celdas.png")
-    figura_suelo(crudo, figuras / "aud_suelo_2020.png")
+    figura_suelo(power, figuras / "aud_suelo_2020.png")
     print(json.dumps(resumen, indent=1, ensure_ascii=False))
     print(f"Tablas en {tablas} y figuras en {figuras}")
 

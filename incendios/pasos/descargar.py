@@ -26,14 +26,13 @@ Earth Engine pide iniciar sesión una vez: agregue --autenticar la primera vez.
 Después de bajar datos nuevos, reentrene con `python -m incendios entrenar`, o deje que lo haga
 `python -m incendios semana`, que reentrena solo cuando hace falta.
 
-AVISO: esta parte no pudo ejecutarse donde se construyó el proyecto (no tenía internet). Lo que
-no toca la red está probado, incluido lo que se hace con las respuestas de cada servidor.
+Las descargas se ejecutaron por primera vez el 24 y 25 de noviembre de 2026 (ERA5-Land, capas, caminos
+y focos); si una API cambia, lo que se hace con cada respuesta está probado contra servidores simulados.
 """
 import argparse
 import importlib.util
 import io
 import json
-import sys
 import time
 import urllib.error
 import urllib.parse

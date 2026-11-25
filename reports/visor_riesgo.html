@@ -135,6 +135,11 @@ select, input[type="date"] {
 .pie { color: var(--muted); font-size: 12px; }
 @media (max-width: 860px) {
   .escena { grid-template-columns: minmax(0, 1fr); }
+  /* En una columna, las cifras y la leyenda van pegadas al mapa; la lista de celdas, después. */
+  .columna { display: contents; }
+  .columna > .mapa { order: 1; }
+  .escena > .panel { order: 2; }
+  .columna > .caja { order: 3; }
   .top { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
   header h1 { font-size: 22px; }
 }

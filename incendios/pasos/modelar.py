@@ -14,9 +14,7 @@ Si cambiaron el clima, el relieve, la cobertura o las capas extra desde la últi
 """
 import argparse
 import json
-import sys
 import time
-from pathlib import Path
 
 
 import joblib

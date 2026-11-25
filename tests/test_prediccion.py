@@ -93,6 +93,16 @@ def test_operativo_dentro_de_los_datos_funciona(ctx_sintetico, modelo_operativo)
     assert r["prob"].shape == (ctx_sintetico.n,) and r["avisos"] == []
 
 
+def test_operativo_avisa_si_los_focos_no_llegan_a_la_vispera(ctx_sintetico, modelo_operativo):
+    import dataclasses
+    # mismos datos, pero el registro de focos dice que termina antes del domingo previo a la semana pedida
+    ctx = dataclasses.replace(ctx_sintetico, notas={**ctx_sintetico.notas, "ultima_fecha_focos": "2019-09-05"})
+    r = prediccion.predecir(ctx, "2019-09-11", "operativo", modelo=modelo_operativo)       # semana del 09-09
+    assert len(r["avisos"]) == 1 and "2019-09-05" in r["avisos"][0] and "incompleta" in r["avisos"][0]
+    al_dia = dataclasses.replace(ctx_sintetico, notas={**ctx_sintetico.notas, "ultima_fecha_focos": "2019-09-08"})
+    assert prediccion.predecir(al_dia, "2019-09-11", "operativo", modelo=modelo_operativo)["avisos"] == []
+
+
 def test_modo_desconocido_o_modelo_de_otro_modo_es_error(ctx_sintetico, modelo_estacional):
     with pytest.raises(ValueError, match="modo"):
         prediccion.predecir(ctx_sintetico, "2018-09-12", "mensual", modelo=modelo_estacional)

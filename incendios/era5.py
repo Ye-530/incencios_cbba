@@ -13,7 +13,7 @@ import calendar
 import io
 import re
 import zipfile
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import numpy as np

@@ -104,9 +104,8 @@ def motivo_para_reentrenar(ctx):
     entrenado = getattr(modelo, "info", {}).get("huella")
     if not entrenado:
         return "el modelo no dice con qué datos se entrenó"
-    if flujo.huellas_distintas(entrenado, ctx.notas["huella"]):
-        cambios = [k for k in flujo.CLAVES_HUELLA_MODELO
-                   if flujo._de_huella(entrenado, k) != flujo._de_huella(ctx.notas["huella"], k)]
+    cambios = flujo.claves_distintas(entrenado, ctx.notas["huella"])
+    if cambios:
         return f"cambiaron {', '.join(cambios)} respecto del entrenamiento"
     return None
 

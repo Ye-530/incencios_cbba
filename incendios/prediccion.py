@@ -83,8 +83,9 @@ def predecir(ctx, fecha, modo="estacional", modelo=None):
         avisos.append(modelo.aviso_version)
     entrenado_con, ahora = getattr(modelo, "info", {}).get("huella"), ctx.notas.get("huella")
     if entrenado_con and ahora and huellas_distintas(entrenado_con, ahora):
-        avisos.append("El modelo se entrenó con otros archivos de clima, relieve, cobertura o capas extra que "
-                      "los que hay ahora: vuelva a entrenar (python -m incendios entrenar) para que modelo y datos coincidan.")
+        avisos.append("El modelo se entrenó con otros archivos de clima, relieve, cobertura, capas extra, variables o "
+                      "satélites que los que hay ahora: vuelva a entrenar (python -m incendios entrenar) para que modelo "
+                      "y datos coincidan.")
     # las columnas se eligen por nombre: sirve para modelos entrenados con o sin capas extra
     nombres = c.nombres(modo)
     variables = list(getattr(modelo, "variables", None) or nombres)

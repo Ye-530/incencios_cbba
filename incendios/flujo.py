@@ -22,15 +22,30 @@ _CLIMA_POR_FUENTE = {"auto": ("clima_era5", "clima_power_nativo", "clima_power")
                      "era5": ("clima_era5",),
                      "power": ("clima_power_nativo", "clima_power")}
 # Partes de la huella que, si cambian, obligan a reentrenar (focos más recientes no).
-CLAVES_HUELLA_MODELO = ("clima", "teselas", "capas")
+CLAVES_HUELLA_MODELO = ("clima", "teselas", "capas", "variables", "satelites")
+# Claves que las huellas anteriores no tenían: si falta en alguna de las dos, no se compara (así un modelo
+# anterior no se reentrena solo por no tenerlas; los que se entrenen desde ahora sí las comparan).
+_CLAVES_NUEVAS = ("variables", "satelites")
 
 
 def _de_huella(huella, clave):
     return huella.get(clave, [] if clave == "capas" else None)       # huellas viejas no tenían capas
 
 
+def claves_distintas(una, otra):
+    """Partes de la huella que cambiaron entre dos huellas (vacío: mismos datos y mismas variables)."""
+    return [k for k in CLAVES_HUELLA_MODELO
+            if not (k in _CLAVES_NUEVAS and (k not in una or k not in otra))
+            and _de_huella(una, k) != _de_huella(otra, k)]
+
+
 def huellas_distintas(una, otra):
-    return any(_de_huella(una, k) != _de_huella(otra, k) for k in CLAVES_HUELLA_MODELO)
+    return bool(claves_distintas(una, otra))
+
+
+def cadena_satelites():
+    """Qué satélite se usa en cada período (config.FUENTES_FOCOS), para la huella."""
+    return [f"{f['nombre']} {f.get('desde', '')}–{f.get('hasta', '')}" for f in config.FUENTES_FOCOS]
 
 
 def datos_cambiaron(carpeta, huella):
@@ -228,6 +243,9 @@ def cargar_todo(rutas=None, malla=None, verboso=True):
             "teselas": sorted(nombre for nombre, _ in json.loads(_firma_teselas(rutas))),
             "focos_hasta": str(conteo.index[-1].date()),
             "capas": sorted(extra.capas) if extra else [],
+            # variables que arma el constructor y satélites de los focos: si cambian, hay que reentrenar
+            "variables": constructor.nombres("operativo"),
+            "satelites": cadena_satelites(),
         },
     }
     if verboso:

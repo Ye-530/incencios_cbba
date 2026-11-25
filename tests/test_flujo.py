@@ -271,6 +271,21 @@ def test_la_huella_anotada_dice_si_hay_que_reentrenar(ctx, tmp_path):
     assert not flujo.datos_cambiaron(tmp_path, dict(huella, focos_hasta="2030-01-01"))   # focos nuevos: no
     assert flujo.datos_cambiaron(tmp_path, dict(huella, capas=["quemas"]))
     assert flujo.datos_cambiaron(tmp_path, dict(huella, clima="clima_era5land_diario.csv.gz"))
+    assert flujo.datos_cambiaron(tmp_path, dict(huella, variables=huella["variables"] + ["otra"]))    # código nuevo
+    assert flujo.datos_cambiaron(tmp_path, dict(huella, satelites=["NOAA-20 2018-04-01–"]))
+
+
+def test_la_huella_guarda_las_variables_y_los_satelites(ctx):
+    huella = ctx.notas["huella"]
+    assert huella["variables"] == ctx.constructor.nombres("operativo")
+    assert [s.split()[0] for s in huella["satelites"]] == ["S-NPP", "NOAA-20"]
+
+
+def test_una_huella_anterior_sin_variables_ni_satelites_no_obliga_a_reentrenar(ctx):
+    nueva = ctx.notas["huella"]
+    vieja = {k: v for k, v in nueva.items() if k not in ("variables", "satelites")}
+    assert not flujo.huellas_distintas(vieja, nueva) and flujo.claves_distintas(nueva, vieja) == []
+    assert flujo.claves_distintas(vieja, dict(nueva, clima="otro.csv")) == ["clima"]
 
 
 def test_las_notas_dicen_de_que_satelite_son_los_focos(ctx):

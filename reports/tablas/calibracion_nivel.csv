@@ -1,9 +1,9 @@
 conjunto,modo,probabilidad,observadas,esperadas,razon,perdida_log
-validación,operativo,"Del modelo, corregida por el muestreo (la que se usa)",13410,10982.959245384482,0.8190126208340404,0.0046244942330294974
+validación,operativo,"Del modelo, corregida por el muestreo (la que se usa)",13410,10851.740351667242,0.8092274684315617,0.004590790555753098
 validación,estacional,"Del modelo, corregida por el muestreo (la que se usa)",13410,9743.305138674077,0.7265701072836747,0.0047824026055749425
 validación,referencia,Tasa base constante,13410,13410.000000000004,1.0000000000000002,0.005911093901777526
-prueba,operativo,"Del modelo, corregida por el muestreo (la que se usa)",8197,9566.88905128566,1.1671207821502574,0.0029474585490450057
-prueba,operativo,Recalibrada con isotónica sobre 2022–2023 (descartada),8197,12293.688866467237,1.4997790492213294,0.003011095983217945
-prueba,estacional,"Del modelo, corregida por el muestreo (la que se usa)",8197,11537.680254692154,1.4075491344018731,0.003054198228791397
-prueba,estacional,Recalibrada con isotónica sobre 2022–2023 (descartada),8197,16130.28842205825,1.9678282813295411,0.003187578665398876
+prueba,operativo,"Del modelo, corregida por el muestreo (la que se usa)",8197,9376.344690534523,1.143875160489755,0.0029085042296683513
+prueba,operativo,Recalibrada con isotónica sobre 2022–2023 (descartada),8197,12070.239113372492,1.472519106181834,0.002966661300247058
+prueba,estacional,"Del modelo, corregida por el muestreo (la que se usa)",8197,11356.956916515246,1.3855016367592101,0.003043962428739345
+prueba,estacional,Recalibrada con isotónica sobre 2022–2023 (descartada),8197,16062.42664669358,1.9595494262161255,0.0031833976526796023
 prueba,referencia,Tasa base constante,8197,8197.0,1.0,0.0039327211586042184

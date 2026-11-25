@@ -1,0 +1,23 @@
+{
+ "semana_inicio": "2026-11-23",
+ "semana_fin": "2026-11-29",
+ "anio_iso": 2026,
+ "semana_iso": 48,
+ "modo": "operativo",
+ "umbrales": [
+  0.0003,
+  0.001,
+  0.003,
+  0.01
+ ],
+ "celdas_por_clase": {
+  "Muy bajo": 123956,
+  "Bajo": 34135,
+  "Moderado": 24039,
+  "Alto": 2647,
+  "Muy alto": 295
+ },
+ "celdas_esperadas_con_fuego": 87.51229858398438,
+ "probabilidad_maxima": 0.06643036752939224,
+ "avisos": []
+}

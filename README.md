@@ -11,8 +11,10 @@ departamento de Cochabamba para esa semana, en celdas de unos 500 m, siguiendo C
   la semana; ver [Actualización semanal](#actualización-semanal).
 
 Los resultados medidos están en [`reports/RESULTADOS.md`](reports/RESULTADOS.md). En 2024–2025, años
-que el modelo no vio, señalar cada semana el 5 % del territorio con mayor riesgo capturó el 38 % de
-las celdas con fuego (modo operativo) y el 32 % (modo estacional); un modelo por provincia capturó el 8 %.
+que el modelo no vio, señalar cada semana el 5 % del territorio con mayor riesgo capturó el 40,7 % de
+las celdas con fuego (modo operativo) y el 32,8 % (modo estacional); la recurrencia histórica sola capturó
+el 27 % y un modelo por provincia, el 8,5 %. Qué se probó para llegar ahí, y qué no sirvió, está en
+[`docs/experimentos-2026-11-25.md`](docs/experimentos-2026-11-25.md).
 
 ## Estructura
 
@@ -84,8 +86,11 @@ proyecto instalado con `pip install -e`). `diagnostico` es `descargar.py` sin op
 | Operación | `semana` | Actualización semanal (ver abajo) | minutos |
 | Operación | `programar` | Deja la actualización semanal programada cada lunes | segundos |
 
-\* En una PC de 2 núcleos y 8 GB de RAM. Sin `--busqueda`, `modelar` usa la variante ya elegida
-(`models/seleccion.json`) y tarda unos 37 min; sin `--ablacion`, unos 28 min.
+\* En una PC de 2 núcleos y 8 GB de RAM, medido antes de que los modelos de prueba y los finales
+promediaran tres semillas (25-nov-2026). Eso suma ocho GBM a `modelar` y hace más lenta la importancia
+por permutación de `evaluar`: cuente con unos 20 a 30 minutos más en `entrenar`. Sin `--busqueda`,
+`modelar` usa la variante ya elegida (`models/seleccion.json`) y tardaba unos 37 min; sin `--ablacion`,
+unos 28 min.
 
 `models/` ya trae los modelos entrenados: puede ir directo a `predecir`. `evaluar` y `visor` necesitan
 las predicciones de prueba que deja `modelar` en `data/processed/` (unos 300 MB que no vienen en el

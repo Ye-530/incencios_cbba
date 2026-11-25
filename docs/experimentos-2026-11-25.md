@@ -60,6 +60,31 @@ La ubicación y el historial que crece con el registro (desde 2012) son además 
 celdas en entrenamiento y validación, la validación temporal no puede detectar que el modelo memorice
 lugares, y "3 años con fuego" significa cosas distintas en 2015 y en 2026.
 
+## Resultado final en los años de prueba (2024–2025)
+
+Con lo elegido en validación (fuego de los últimos días y promedio de tres semillas), reentrenado con
+`python -m incendios entrenar --ablacion --rehacer` y medido una sola vez en 2024–2025:
+
+| Modo | Métrica | Antes | Ahora |
+|---|---|---:|---:|
+| Operativo | Captura 1 % | 12,2 % | 14,7 % |
+| Operativo | Captura 5 % | 39,2 % | 40,7 % |
+| Operativo | Captura 10 % | 62,0 % | 64,0 % |
+| Operativo | Área para capturar el 50 % | 7,1 % | 6,8 % |
+| Operativo | PR-AUC | 0,0125 | 0,0207 |
+| Estacional | Captura 5 % | 32,8 % | 32,8 % |
+| Estacional | PR-AUC | 0,0097 | 0,0101 |
+
+El modo estacional no tiene fuego reciente, así que solo cambia por el promedio de semillas. El nivel
+de las probabilidades queda donde estaba: el modelo operativo espera 1,14 celdas con fuego por cada una
+observada (antes 1,17).
+
+En la ablación oficial de `RESULTADOS.md` (validación 2022–2023, una semilla), quitar el fuego de los
+últimos días baja la captura al 5 % 0,8 puntos y la del 10 % 1,5 puntos; en la importancia por
+permutación es el tercer grupo, después del fuego reciente y del historial. Las demás filas de esa
+ablación cambian menos de lo que se mueve una semilla (hasta 1,3 puntos): no hay que leerlas como
+mejoras o pérdidas reales.
+
 ## Satélites: el cambio de S-NPP a NOAA-20
 
 NASA dejó de producir S-NPP el 2 de noviembre de 2026. Con la serie NOAA-20 bajada de FIRMS desde abril

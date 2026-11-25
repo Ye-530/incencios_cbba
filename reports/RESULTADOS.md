@@ -10,12 +10,12 @@ Generado por `python -m incendios evaluar`. Todas las métricas se calculan sobr
 
 | Modelo | ROC-AUC | PR-AUC | Captura 1 % | Captura 5 % | Captura 10 % | Área para 50 % | Área para 80 % |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Operativo (500 m) | 0,935 | 0,016 | 13,8 % | 38,7 % | 57,2 % | 7,8 % | 19,5 % |
-| Bosque aleatorio, operativo | 0,938 | 0,014 | 13,8 % | 39,5 % | 59,6 % | 7,5 % | 18,7 % |
-| Regresión logística, operativo | 0,921 | 0,012 | 11,7 % | 35,0 % | 56,3 % | 8,3 % | 21,3 % |
+| Operativo (500 m) | 0,936 | 0,017 | 14,1 % | 39,5 % | 58,7 % | 7,5 % | 19,2 % |
+| Regresión logística, operativo | 0,923 | 0,016 | 13,2 % | 36,0 % | 57,1 % | 8,1 % | 20,9 % |
+| Bosque aleatorio, operativo | 0,939 | 0,016 | 14,6 % | 40,8 % | 61,1 % | 7,0 % | 18,9 % |
 | Estacional (500 m) | 0,924 | 0,012 | 10,7 % | 33,0 % | 52,5 % | 9,4 % | 21,9 % |
 | Bosque aleatorio, estacional | 0,926 | 0,011 | 10,4 % | 33,9 % | 53,5 % | 9,0 % | 22,2 % |
-| Regresión logística, estacional | 0,912 | 0,011 | 10,0 % | 30,3 % | 51,1 % | 9,7 % | 25,2 % |
+| Regresión logística, estacional | 0,912 | 0,011 | 9,9 % | 30,5 % | 51,2 % | 9,7 % | 25,1 % |
 | Recurrencia histórica | 0,890 | 0,008 | 7,9 % | 25,7 % | 42,6 % | 12,5 % | 29,0 % |
 | Por provincia (enfoque anterior) | 0,846 | 0,003 | 1,5 % | 7,5 % | 16,3 % | 29,1 % | 51,6 % |
 
@@ -23,8 +23,8 @@ Generado por `python -m incendios evaluar`. Todas las métricas se calculan sobr
 
 | Modelo | ROC-AUC | PR-AUC | Captura 1 % | Captura 5 % | Captura 10 % | Área para 50 % | Área para 80 % |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Operativo (500 m) | 0,949 | 0,012 | 12,2 % | 39,2 % | 62,0 % | 7,1 % | 16,0 % |
-| Estacional (500 m) | 0,941 | 0,010 | 7,9 % | 32,8 % | 55,9 % | 8,6 % | 17,7 % |
+| Operativo (500 m) | 0,950 | 0,021 | 14,7 % | 40,6 % | 64,0 % | 6,8 % | 15,8 % |
+| Estacional (500 m) | 0,942 | 0,010 | 8,6 % | 32,8 % | 55,9 % | 8,5 % | 17,8 % |
 | Recurrencia histórica | 0,913 | 0,006 | 6,2 % | 27,3 % | 48,2 % | 10,4 % | 22,3 % |
 | Por provincia (enfoque anterior) | 0,883 | 0,004 | 1,7 % | 8,5 % | 17,2 % | 29,4 % | 46,8 % |
 
@@ -32,8 +32,8 @@ Generado por `python -m incendios evaluar`. Todas las métricas se calculan sobr
 
 | Modelo | Precisión top 1 % | Precisión top 1 % (±1 celda) | Focos nuevos, captura 5 % | Focos nuevos, captura 10 % |
 |---|---:|---:|---:|---:|
-| Operativo (500 m) | 0,55 % | 2,51 % | 19,8 % | 38,5 % |
-| Estacional (500 m) | 0,36 % | 1,67 % | 25,5 % | 42,6 % |
+| Operativo (500 m) | 0,66 % | 2,74 % | 21,9 % | 42,6 % |
+| Estacional (500 m) | 0,39 % | 1,77 % | 26,4 % | 43,4 % |
 | Recurrencia histórica | 0,28 % | 1,31 % | 23,8 % | 38,1 % |
 | Por provincia (enfoque anterior) | 0,08 % | 0,49 % | 6,6 % | 13,3 % |
 
@@ -43,21 +43,21 @@ Foco nuevo: celda con fuego sin ningún foco a menos de ~2,75 km en las cuatro s
 
 | Clase | Probabilidad desde | % de celdas-semana | % del fuego | Frecuencia observada |
 |---|---:|---:|---:|---:|
-| Muy bajo | 0,00 % | 80,270 | 6,3 | 0,004 % |
-| Bajo | 0,03 % | 11,546 | 10,0 | 0,039 % |
-| Moderado | 0,10 % | 4,217 | 12,3 | 0,132 % |
-| Alto | 0,30 % | 2,854 | 32,8 | 0,519 % |
-| Muy alto | 1,00 % | 1,114 | 38,6 | 1,565 % |
+| Muy bajo | 0,00 % | 80,166 | 6,4 | 0,004 % |
+| Bajo | 0,03 % | 11,768 | 9,8 | 0,038 % |
+| Moderado | 0,10 % | 4,206 | 12,3 | 0,133 % |
+| Alto | 0,30 % | 2,768 | 32,0 | 0,523 % |
+| Muy alto | 1,00 % | 1,092 | 39,5 | 1,633 % |
 
 ### Clases de riesgo, modo estacional (prueba)
 
 | Clase | Probabilidad desde | % de celdas-semana | % del fuego | Frecuencia observada |
 |---|---:|---:|---:|---:|
-| Muy bajo | 0,00 % | 75,572 | 5,5 | 0,003 % |
-| Bajo | 0,03 % | 14,585 | 10,6 | 0,033 % |
-| Moderado | 0,10 % | 5,240 | 11,9 | 0,102 % |
-| Alto | 0,30 % | 3,208 | 35,2 | 0,496 % |
-| Muy alto | 1,00 % | 1,394 | 36,9 | 1,196 % |
+| Muy bajo | 0,00 % | 75,516 | 5,5 | 0,003 % |
+| Bajo | 0,03 % | 14,540 | 10,4 | 0,032 % |
+| Moderado | 0,10 % | 5,369 | 12,2 | 0,103 % |
+| Alto | 0,30 % | 3,215 | 34,8 | 0,489 % |
+| Muy alto | 1,00 % | 1,360 | 37,2 | 1,235 % |
 
 ## Nivel de las probabilidades
 
@@ -65,13 +65,13 @@ Razón entre las celdas con fuego esperadas (suma de probabilidades) y las obser
 
 | Años | Modo | Probabilidad | Observadas | Esperadas | Esperadas / observadas | Pérdida logarítmica |
 |---|---|---|---:|---:|---:|---:|
-| validación | operativo | Del modelo, corregida por el muestreo (la que se usa) | 13.410 | 10.983 | 0,82 | 0,00462 |
+| validación | operativo | Del modelo, corregida por el muestreo (la que se usa) | 13.410 | 10.852 | 0,81 | 0,00459 |
 | validación | estacional | Del modelo, corregida por el muestreo (la que se usa) | 13.410 | 9.743 | 0,73 | 0,00478 |
 | validación | referencia | Tasa base constante | 13.410 | 13.410 | 1,00 | 0,00591 |
-| prueba | operativo | Del modelo, corregida por el muestreo (la que se usa) | 8.197 | 9.567 | 1,17 | 0,00295 |
-| prueba | operativo | Recalibrada con isotónica sobre 2022–2023 (descartada) | 8.197 | 12.294 | 1,50 | 0,00301 |
-| prueba | estacional | Del modelo, corregida por el muestreo (la que se usa) | 8.197 | 11.538 | 1,41 | 0,00305 |
-| prueba | estacional | Recalibrada con isotónica sobre 2022–2023 (descartada) | 8.197 | 16.130 | 1,97 | 0,00319 |
+| prueba | operativo | Del modelo, corregida por el muestreo (la que se usa) | 8.197 | 9.376 | 1,14 | 0,00291 |
+| prueba | operativo | Recalibrada con isotónica sobre 2022–2023 (descartada) | 8.197 | 12.070 | 1,47 | 0,00297 |
+| prueba | estacional | Del modelo, corregida por el muestreo (la que se usa) | 8.197 | 11.357 | 1,39 | 0,00304 |
+| prueba | estacional | Recalibrada con isotónica sobre 2022–2023 (descartada) | 8.197 | 16.062 | 1,96 | 0,00318 |
 | prueba | referencia | Tasa base constante | 8.197 | 8.197 | 1,00 | 0,00393 |
 
 ## Prueba por zona, temporada y año
@@ -80,27 +80,46 @@ Razón entre las celdas con fuego esperadas (suma de probabilidades) y las obser
 
 | Grupo | Celdas con fuego | Tasa base | ROC-AUC | Captura 5 % | Captura 10 % | Área para 50 % |
 |---|---:|---:|---:|---:|---:|---:|
-| Trópico | 6.565 | 0,105 % | 0,939 | 22,8 % | 37,0 % | 15,7 % |
-| Región Metropolitana | 236 | 0,026 % | 0,810 | 13,1 % | 20,3 % | 30,8 % |
-| Valles, Cono Sur y Andina | 1.396 | 0,013 % | 0,904 | 44,6 % | 56,2 % | 7,2 % |
-| Con relieve | 8.197 | 0,045 % | 0,949 | 39,2 % | 62,0 % | 7,1 % |
-| Temporada (jul–nov) | 7.782 | 0,108 % | 0,914 | 39,6 % | 62,7 % | 6,9 % |
-| Resto del año | 415 | 0,004 % | 0,840 | 32,0 % | 48,7 % | 10,6 % |
-| 2024 | 4.525 | 0,053 % | 0,949 | 38,9 % | 59,3 % | 7,4 % |
-| 2025 | 3.672 | 0,038 % | 0,947 | 39,6 % | 65,2 % | 6,7 % |
+| Trópico | 6.565 | 0,105 % | 0,942 | 24,2 % | 37,3 % | 15,3 % |
+| Región Metropolitana | 236 | 0,026 % | 0,811 | 14,4 % | 24,6 % | 31,8 % |
+| Valles, Cono Sur y Andina | 1.396 | 0,013 % | 0,906 | 45,3 % | 56,9 % | 6,7 % |
+| Con relieve | 8.197 | 0,045 % | 0,950 | 40,6 % | 64,0 % | 6,8 % |
+| Temporada (jul–nov) | 7.782 | 0,108 % | 0,917 | 41,0 % | 64,7 % | 6,7 % |
+| Resto del año | 415 | 0,004 % | 0,847 | 34,0 % | 50,6 % | 9,9 % |
+| 2024 | 4.525 | 0,053 % | 0,951 | 40,5 % | 62,0 % | 7,0 % |
+| 2025 | 3.672 | 0,038 % | 0,948 | 40,8 % | 66,5 % | 6,6 % |
 
 ### Estacional (500 m)
 
 | Grupo | Celdas con fuego | Tasa base | ROC-AUC | Captura 5 % | Captura 10 % | Área para 50 % |
 |---|---:|---:|---:|---:|---:|---:|
-| Trópico | 6.565 | 0,105 % | 0,929 | 15,9 % | 29,0 % | 19,5 % |
-| Región Metropolitana | 236 | 0,026 % | 0,802 | 9,3 % | 15,3 % | 34,5 % |
-| Valles, Cono Sur y Andina | 1.396 | 0,013 % | 0,893 | 38,8 % | 52,4 % | 8,9 % |
-| Con relieve | 8.197 | 0,045 % | 0,941 | 32,8 % | 55,9 % | 8,6 % |
-| Temporada (jul–nov) | 7.782 | 0,108 % | 0,901 | 33,1 % | 56,6 % | 8,5 % |
-| Resto del año | 415 | 0,004 % | 0,821 | 27,0 % | 42,9 % | 12,3 % |
-| 2024 | 4.525 | 0,053 % | 0,939 | 28,4 % | 50,0 % | 10,0 % |
-| 2025 | 3.672 | 0,038 % | 0,944 | 38,1 % | 63,2 % | 7,0 % |
+| Trópico | 6.565 | 0,105 % | 0,930 | 16,0 % | 29,0 % | 19,4 % |
+| Región Metropolitana | 236 | 0,026 % | 0,802 | 9,7 % | 14,4 % | 33,5 % |
+| Valles, Cono Sur y Andina | 1.396 | 0,013 % | 0,894 | 40,3 % | 52,7 % | 8,8 % |
+| Con relieve | 8.197 | 0,045 % | 0,942 | 32,8 % | 55,9 % | 8,5 % |
+| Temporada (jul–nov) | 7.782 | 0,108 % | 0,902 | 33,1 % | 56,7 % | 8,3 % |
+| Resto del año | 415 | 0,004 % | 0,823 | 26,5 % | 41,0 % | 12,4 % |
+| 2024 | 4.525 | 0,053 % | 0,940 | 28,0 % | 50,0 % | 10,0 % |
+| 2025 | 3.672 | 0,038 % | 0,944 | 38,7 % | 63,2 % | 7,1 % |
+
+## Ablación (validación): el modelo operativo sin cada grupo de variables
+
+| Variante | PR-AUC | Cambio PR-AUC | Captura 5 % | Cambio captura 5 % | Captura 10 % |
+|---|---:|---:|---:|---:|---:|
+| sin_quemas_previas | 0,015 | -0,002 | 38,4 % | -1,1 % | 58,3 % |
+| sin_uso_suelo | 0,015 | -0,001 | 39,4 % | -0,1 % | 58,6 % |
+| sin_fuego_reciente | 0,016 | -0,001 | 37,5 % | -2,0 % | 57,1 % |
+| sin_fuego_dias | 0,016 | -0,001 | 38,7 % | -0,8 % | 57,2 % |
+| sin_caminos | 0,016 | -0,001 | 39,5 % | -0,0 % | 58,8 % |
+| sin_clima_normal | 0,016 | -0,001 | 40,7 % | 1,1 % | 59,6 % |
+| sin_terreno | 0,016 | -0,001 | 38,7 % | -0,9 % | 58,4 % |
+| sin_poblacion | 0,017 | -0,000 | 39,1 % | -0,5 % | 59,0 % |
+| completo | 0,017 | 0,000 | 39,5 % | 0,0 % | 58,7 % |
+| sin_historial | 0,018 | 0,001 | 40,1 % | 0,6 % | 59,3 % |
+| sin_deforestacion | 0,018 | 0,001 | 39,0 % | -0,5 % | 59,3 % |
+| sin_cobertura | 0,018 | 0,001 | 39,4 % | -0,1 % | 58,6 % |
+| sin_epoca | 0,018 | 0,001 | 38,9 % | -0,6 % | 58,0 % |
+| sin_clima_antecedente | 0,019 | 0,002 | 39,5 % | 0,0 % | 58,7 % |
 
 ## Importancia por permutación (muestra de prueba)
 
@@ -108,34 +127,35 @@ Razón entre las celdas con fuego esperadas (suma de probabilidades) y las obser
 
 | Grupo de variables | Caída del PR-AUC al barajarlo |
 |---|---:|
-| Fuego reciente | 0,142 |
-| Historial de fuego | 0,068 |
-| Época del año | 0,061 |
-| Cobertura de suelo | 0,026 |
-| Clima normal | 0,015 |
-| Deforestación (Hansen) | 0,014 |
-| Uso del suelo (MapBiomas) | 0,009 |
-| Población (WorldPop) | 0,008 |
-| Clima antecedente | 0,005 |
+| Fuego reciente | 0,121 |
+| Historial de fuego | 0,082 |
+| Fuego de los últimos días | 0,069 |
+| Época del año | 0,059 |
+| Cobertura de suelo | 0,027 |
+| Clima normal | 0,023 |
+| Deforestación (Hansen) | 0,020 |
+| Uso del suelo (MapBiomas) | 0,006 |
+| Clima antecedente | 0,004 |
+| Población (WorldPop) | 0,002 |
+| Caminos (OpenStreetMap) | 0,001 |
 | Relieve | 0,001 |
-| Caminos (OpenStreetMap) | -0,000 |
-| Quemas previas (MODIS) | -0,009 |
+| Quemas previas (MODIS) | -0,002 |
 
 ### Modo estacional
 
 | Grupo de variables | Caída del PR-AUC al barajarlo |
 |---|---:|
-| Historial de fuego | 0,183 |
-| Época del año | 0,115 |
-| Deforestación (Hansen) | 0,049 |
-| Cobertura de suelo | 0,006 |
-| Relieve | 0,003 |
-| Uso del suelo (MapBiomas) | 0,002 |
-| Caminos (OpenStreetMap) | 0,001 |
-| Clima normal | 0,000 |
+| Historial de fuego | 0,191 |
+| Época del año | 0,101 |
+| Deforestación (Hansen) | 0,038 |
+| Clima normal | 0,017 |
+| Cobertura de suelo | 0,012 |
+| Caminos (OpenStreetMap) | 0,002 |
+| Uso del suelo (MapBiomas) | 0,001 |
+| Relieve | 0,001 |
 | Población (WorldPop) | -0,002 |
-| Quemas previas (MODIS) | -0,011 |
+| Quemas previas (MODIS) | -0,009 |
 
 ## Acierto en el tiempo (prueba)
 
-Correlación semanal entre celdas con fuego observadas y esperadas: modo operativo 0,73; modo estacional 0,72.
+Correlación semanal entre celdas con fuego observadas y esperadas: modo operativo 0,75; modo estacional 0,73.

@@ -11,14 +11,14 @@
   0.01
  ],
  "celdas_por_clase": {
-  "Muy bajo": 87495,
-  "Bajo": 52553,
-  "Moderado": 16684,
-  "Alto": 21898,
-  "Muy alto": 6442
+  "Muy bajo": 86542,
+  "Bajo": 52639,
+  "Moderado": 15796,
+  "Alto": 23652,
+  "Muy alto": 6443
  },
- "celdas_esperadas_con_fuego": 286.9687194824219,
- "probabilidad_maxima": 0.027279114350676537,
+ "celdas_esperadas_con_fuego": 296.21148681640625,
+ "probabilidad_maxima": 0.024892041459679604,
  "avisos": [
   "La capa quemas llega hasta 2025 y para 2027 lo ideal sería 2026: actualícela con: python -m incendios descargar --que capas",
   "La capa perdida_bosque llega hasta 2025 y para 2027 lo ideal sería 2026: actualícela con: python -m incendios descargar --que capas",

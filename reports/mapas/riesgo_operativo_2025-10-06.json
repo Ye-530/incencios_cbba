@@ -11,13 +11,13 @@
   0.01
  ],
  "celdas_por_clase": {
-  "Muy bajo": 101459,
-  "Bajo": 40392,
-  "Moderado": 11264,
-  "Alto": 10712,
-  "Muy alto": 21245
+  "Muy bajo": 100689,
+  "Bajo": 41208,
+  "Moderado": 11196,
+  "Alto": 10523,
+  "Muy alto": 21456
  },
- "celdas_esperadas_con_fuego": 655.7195434570312,
- "probabilidad_maxima": 0.06241726875305176,
+ "celdas_esperadas_con_fuego": 698.3660888671875,
+ "probabilidad_maxima": 0.06571520119905472,
  "avisos": []
 }

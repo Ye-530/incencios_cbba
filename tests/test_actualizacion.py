@@ -74,16 +74,38 @@ def test_el_cache_de_un_anio_se_rehace_solo_si_cambia_alguno_de_sus_meses(meses,
     destino = tmp_path / "clima_era5land_diario.csv.gz"
     actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
     cache19, cache20 = (meses / "diario" / f"era5land_diario_{a}.csv.gz" for a in (2019, 2020))
+    assert (meses / "diario" / "era5land_diario_2019.firma.json").exists()
     viejo = time.time() - 1000
-    for p in meses.glob("*.nc"):
-        os.utime(p, (viejo, viejo))
     for c in (cache19, cache20):
-        os.utime(c, (viejo + 500, viejo + 500))
+        os.utime(c, (viejo, viejo))
+    for p in meses.glob("*.nc"):                    # archivos más nuevos que el caché, pero con los mismos datos
+        os.utime(p, None)                           # (como tras copiar la carpeta o un git checkout)
     actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
-    assert cache19.stat().st_mtime == pytest.approx(viejo + 500)          # nada cambió: no se rehace
-    os.utime(era5.archivo_mes(meses, 2020, 1), None)                      # enero se volvió a bajar
+    assert cache19.stat().st_mtime == pytest.approx(viejo) and cache20.stat().st_mtime == pytest.approx(viejo)
+    escribir_mes(meses, 2020, 1, pd.date_range("2020-01-01", "2020-01-12"))     # enero se volvió a bajar, con más días
     actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
     assert cache19.stat().st_mtime > viejo + 600 and cache20.stat().st_mtime > viejo + 600
+    assert pd.read_csv(destino)["fecha"].max() == "2020-01-12"
+
+
+def test_un_cache_sin_firma_vale_si_es_mas_nuevo_que_sus_meses_y_desde_ahi_queda_firmado(meses, tmp_path):
+    destino = tmp_path / "clima_era5land_diario.csv.gz"
+    actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
+    firma = meses / "diario" / "era5land_diario_2019.firma.json"
+    firma.unlink()                                   # como los cachés armados con versiones anteriores
+    actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
+    assert firma.exists()
+
+
+def test_la_tabla_escrita_es_identica_byte_a_byte_si_los_datos_no_cambian(meses, tmp_path):
+    destino = tmp_path / "clima.csv.gz"
+    actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
+    antes = destino.read_bytes()
+    time.sleep(1.1)                                  # gzip guarda la hora si no se le dice lo contrario
+    actualizacion.armar_clima_era5(meses, MALLA, MASCARA, destino)
+    assert destino.read_bytes() == antes
+    import gzip
+    assert b"\r\n" not in gzip.decompress(antes)
 
 
 def test_sin_archivos_mensuales_es_un_error_claro(tmp_path):

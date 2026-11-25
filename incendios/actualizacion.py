@@ -4,6 +4,8 @@
 - De los NetCDF mensuales a la tabla diaria del proyecto, con un caché por año.
 - Qué semanas se pueden predecir en modo operativo con los datos que hay.
 """
+import hashlib
+import json
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -45,18 +47,44 @@ def _diario_del_anio(entradas, anio, malla, mascara, margen):
 
 
 def _escribir(tabla, destino):
+    """CSV comprimido idéntico byte a byte en cualquier sistema: fin de línea \\n y gzip sin fecha.
+    Así, rehacer un archivo con los mismos datos no aparece como cambio en git."""
     destino = Path(destino)
     destino.parent.mkdir(parents=True, exist_ok=True)
     temporal = destino.with_name(destino.name + ".parcial.csv.gz")
-    tabla.to_csv(temporal, index=False, compression="gzip")
+    tabla.to_csv(temporal, index=False, lineterminator="\n", compression={"method": "gzip", "mtime": 0})
     temporal.replace(destino)
+
+
+def _firma(entradas):
+    return {p.name: hashlib.sha1(p.read_bytes()).hexdigest() for p in entradas}
+
+
+def _ruta_firma(cache):
+    return cache.with_name(cache.name.replace(".csv.gz", ".firma.json"))
+
+
+def cache_vigente(cache, entradas):
+    """¿El diario de un año se armó con estos mismos archivos mensuales? Se compara el contenido, no la
+    fecha: copiar la carpeta o hacer `git checkout` cambia las fechas sin cambiar los datos."""
+    cache = Path(cache)
+    if not cache.exists():
+        return False
+    ruta = _ruta_firma(cache)
+    if ruta.exists():
+        return json.loads(ruta.read_text(encoding="utf-8")) == _firma(entradas)
+    # cachés de antes de la firma: decide la fecha, y desde ahora queda la firma
+    vigente = cache.stat().st_mtime >= max(p.stat().st_mtime for p in entradas)
+    if vigente:
+        ruta.write_text(json.dumps(_firma(entradas), indent=1), encoding="utf-8")
+    return vigente
 
 
 def armar_clima_era5(carpeta_meses, malla, mascara, destino, margen=1, exigir_desde=None, verboso=False):
     """Tabla diaria de ERA5-Land (esquema del proyecto) a partir de los NetCDF mensuales.
 
-    Cada año se guarda en carpeta_meses/diario/ y solo se recalcula si cambió alguno de sus
-    meses o el enero siguiente (la lluvia y la noche del 31 de diciembre están en ese archivo).
+    Cada año se guarda en carpeta_meses/diario/ y solo se recalcula si cambió el contenido de alguno
+    de sus meses o del enero siguiente (la lluvia y la noche del 31 de diciembre están en ese archivo).
     Si faltan días, o la serie empieza después de `exigir_desde`, no escribe nada: un archivo
     de clima con huecos pasaría al modelo como datos faltantes sin que nadie lo note.
     Devuelve la ruta del archivo final y la última fecha.
@@ -74,10 +102,11 @@ def armar_clima_era5(carpeta_meses, malla, mascara, destino, margen=1, exigir_de
             continue                     # solo está el enero de un año siguiente
         entradas += archivos_del_mes(carpeta_meses, anio + 1, 1)
         ruta = cache / f"era5land_diario_{anio}.csv.gz"
-        if not ruta.exists() or ruta.stat().st_mtime < max(p.stat().st_mtime for p in entradas):
+        if not cache_vigente(ruta, entradas):
             if verboso:
                 print(f"    días de {anio}...", flush=True)
             _escribir(_diario_del_anio(entradas, anio, malla, mascara, margen), ruta)
+            _ruta_firma(ruta).write_text(json.dumps(_firma(entradas), indent=1), encoding="utf-8")
         partes.append(pd.read_csv(ruta))
     tabla = pd.concat(partes, ignore_index=True)
     completo = tabla.groupby("provincia")["fecha"].max().min()       # el último día que tienen todos

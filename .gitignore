@@ -21,3 +21,6 @@ credenciales.json
 
 # Resultados de versiones anteriores
 salidas/
+
+# Predicciones del modelo (archivos generados de 69-71 MB, se recrean con 'entrenar')
+data/processed/predicciones/

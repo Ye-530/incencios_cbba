@@ -126,7 +126,8 @@ def figura_cobertura(ctx, focos_depto, est, limite, tabla, ruta):
     g.contornos(ax, limite, color=g.TINTA_2, ancho=0.9)
     lon, lat = m.centros()
     con_dem = np.isfinite(est["elev_media"])
-    if (~con_dem & ctx.mascara).any():       # el borde del relieve solo tiene sentido si falta en alguna parte
+    sin_dem = (~con_dem & ctx.mascara).sum() / ctx.mascara.sum()
+    if sin_dem >= 0.01:                      # el borde del relieve solo tiene sentido si falta en una zona apreciable
         ax.contour(lon, lat, con_dem.astype(float), levels=[0.5], colors=[g.NARANJA], linewidths=1.6, zorder=4)
     con_lc = np.isfinite(est["lc_arbol"])
     if (~con_lc & ctx.mascara).any():

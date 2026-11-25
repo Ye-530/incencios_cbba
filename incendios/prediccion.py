@@ -7,8 +7,9 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from . import config
+from . import config, focos as mod_focos
 from .flujo import huellas_distintas
+from .modelos import variables_de_entrenamiento
 from .evaluacion import clases_de_riesgo
 from .geotiff import escribir_geotiff
 from .graficos import CLASES
@@ -82,10 +83,14 @@ def predecir(ctx, fecha, modo="estacional", modelo=None):
     if getattr(modelo, "aviso_version", None):
         avisos.append(modelo.aviso_version)
     entrenado_con, ahora = getattr(modelo, "info", {}).get("huella"), ctx.notas.get("huella")
-    if entrenado_con and ahora and huellas_distintas(entrenado_con, ahora):
+    # variables que el código arma ahora y el modelo no conocía (código nuevo, o capas que antes no estaban)
+    nuevas = sorted(set(c.nombres(modo)) - variables_de_entrenamiento(modelo))
+    if (entrenado_con and ahora and huellas_distintas(entrenado_con, ahora)) or nuevas:
+        detalle = f" (no conoce {len(nuevas)} variables: {', '.join(nuevas[:4])}{'…' if len(nuevas) > 4 else ''})" \
+            if nuevas else ""
         avisos.append("El modelo se entrenó con otros archivos de clima, relieve, cobertura, capas extra, variables o "
-                      "satélites que los que hay ahora: vuelva a entrenar (python -m incendios entrenar) para que modelo "
-                      "y datos coincidan.")
+                      f"satélites que los que hay ahora{detalle}: vuelva a entrenar (python -m incendios entrenar) "
+                      "para que modelo y datos coincidan.")
     # las columnas se eligen por nombre: sirve para modelos entrenados con o sin capas extra
     nombres = c.nombres(modo)
     variables = list(getattr(modelo, "variables", None) or nombres)
@@ -111,6 +116,12 @@ def predecir(ctx, fecha, modo="estacional", modelo=None):
             avisos.append(f"La semana anterior tuvo solo {int(ctx.dias_obs[semana - 1])} días de satélite: "
                           f"la actividad reciente de fuego está subestimada.")
         vispera = info["inicio"] - timedelta(days=1)
+        sin_satelite = set(mod_focos.dias_sin_satelite(ctx.conteo_diario))
+        finde = [info["inicio"] - timedelta(days=k) for k in (3, 2, 1)]       # viernes, sábado y domingo previos
+        sin_pasada = [d for d in finde if pd.Timestamp(d) in sin_satelite]
+        if sin_pasada:
+            avisos.append(f"No hubo satélite el {', '.join(f'{d:%d/%m}' for d in sin_pasada)}: el fuego de los "
+                          f"últimos días (viernes a domingo) está subestimado y el riesgo puede salir bajo.")
         if str(ultimo) < str(vispera):
             avisos.append(f"Los focos llegan hasta el {ultimo} y la semana empieza el {info['inicio']}: la "
                           f"actividad reciente de fuego está incompleta. Baje los focos nuevos "

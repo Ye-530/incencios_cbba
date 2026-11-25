@@ -152,3 +152,9 @@ def test_entrenar_con_varias_semillas_promedia_un_modelo_por_semilla(ctx_sinteti
     crudo = np.mean([m.estimador.predict_proba(X[:, m.columnas])[:, 1] for m in sueltos], axis=0)
     assert np.allclose(varios.puntaje(X), corregir_prior(crudo, muestra_sintetica["tasa_neg"]), atol=1e-6)
     assert np.allclose(uno.puntaje(X), sueltos[0].puntaje(X))
+
+
+def test_el_ensamble_es_un_clasificador_para_scikit_learn():
+    from sklearn.base import is_classifier
+    X, y = datos()
+    assert is_classifier(modelos.Ensamble([modelos.crear("gbm", rapido=True).fit(X, y)]))

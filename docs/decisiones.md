@@ -183,10 +183,14 @@ se aceptó si ganaba en dos períodos de validación (2020–2021 y 2022–2023)
     cuatro (en promedio, alrededor de un punto). Va al final de la matriz, así los modelos anteriores
     siguen leyendo sus columnas en el mismo lugar. *Costo:* el modo operativo necesita los focos hasta el
     domingo; si llegan solo hasta el sábado, la predicción lo avisa (decisión 30).
-34. **Los modelos de prueba y los finales promedian tres semillas (`config.SEMILLAS_GBM`).** El promedio fue
-    igual o mejor que la mejor semilla sola en las cuatro corridas. La fase de validación y la ablación
-    siguen con una semilla, para que sus comparaciones sean parejas y para no triplicar su tiempo.
-    *Costo:* `modelar` entrena cuatro GBM más por régimen.
+34. **Los modelos de prueba y los finales promedian tres semillas (`config.SEMILLAS_GBM`).** El promedio de
+    dos semillas fue igual o mejor que la mejor semilla sola en las cuatro corridas; se usan tres porque
+    promediar más modelos solo reduce la variación (el número de árboles es el elegido para un modelo
+    solo). La fase de validación y la ablación siguen con una semilla, para que sus comparaciones sean
+    parejas y para no triplicar su tiempo. *Costo:* `modelar` entrena cuatro GBM más por régimen. La fila
+    "recalibrada (descartada)" de `RESULTADOS.md` ajusta la isotónica con predicciones de validación de un
+    modelo solo y la aplica al promedio de tres de la prueba: sirve como referencia, no como comparación
+    exacta.
 35. **Se descartaron:** ubicación (latitud y longitud), historial extra (años desde el último fuego,
     años con fuego, máximo anual), intensidad del fuego reciente (detecciones, FRP, semanas desde el
     último fuego), suavizado espacial de las probabilidades, mezcla con el bosque aleatorio y usar la
@@ -200,7 +204,11 @@ se aceptó si ganaba en dos períodos de validación (2020–2021 y 2022–2023)
 37. **La huella del modelo incluye las variables y los satélites, y las predicciones guardadas quedan
     atadas a ella.** Una revisión independiente vio que `modelar` reutilizaba modelos y predicciones de
     otra configuración sin avisar si cambiaban las variables. Ahora `modelar` recalcula las predicciones
-    cuya huella no coincide (las de versiones anteriores, sin huella, también), y `visor` avisa.
+    cuya huella no coincide (las de versiones anteriores, sin huella, también), y `visor` avisa. Para los
+    modelos de versiones anteriores, cuya huella no traía la lista de variables, se compara la lista que
+    guarda el propio modelo (las que usa más las excluidas): si el código arma otras, `modelar` y
+    `semana` reentrenan, y `predecir` avisa. La predicción también avisa si no hubo satélite de viernes a
+    domingo, porque entonces el fuego de los últimos días sale en cero (pasó en 4 de las ~600 semanas).
 38. **La muestra de entrenamiento ya no se versiona.** Pesaba 1 GB en Git LFS (la cuota gratuita de
     GitHub es de 1 GB al mes) y `preparar` la rehace en unos minutos. *Costo:* `evaluar` necesita correr
     `preparar` antes (o `entrenar`, que lo hace todo).

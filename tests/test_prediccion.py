@@ -234,3 +234,26 @@ def test_los_modelos_y_sus_versiones_van_a_la_carpeta_models(tmp_path):
     assert ruta == tmp_path / "models" / "versiones.json" and "scikit-learn" in ruta.read_text()
     with pytest.raises(FileNotFoundError, match="entrenar"):
         prediccion.cargar_modelo(rutas.modelos, "operativo")
+
+
+def test_avisa_si_el_codigo_suma_variables_que_el_modelo_no_conoce(ctx_sintetico, muestra_sintetica,
+                                                                    modelo_operativo):
+    from incendios import variables
+    # un modelo entrenado antes de que existiera fuego_dias: sin esas columnas y sin saber que existían
+    viejo = modelos.entrenar("gbm", "operativo", muestra_sintetica, ctx_sintetico, rapido=True,
+                             excluir=variables.FUEGO_DIAS)
+    viejo.info["excluidas"] = []
+    avisos = prediccion.predecir(ctx_sintetico, "2019-09-11", "operativo", modelo=viejo)["avisos"]
+    assert len(avisos) == 1 and "rec_d" in avisos[0] and "incendios entrenar" in avisos[0]
+    assert modelos.variables_cambiaron(viejo, ctx_sintetico)
+    assert not modelos.variables_cambiaron(modelo_operativo, ctx_sintetico)
+
+
+def test_avisa_si_no_hubo_satelite_el_fin_de_semana_anterior(ctx_sintetico, modelo_operativo):
+    import dataclasses
+    conteo = ctx_sintetico.conteo_diario.copy()
+    conteo.loc[pd.Timestamp("2019-09-07"):pd.Timestamp("2019-09-08")] = 0      # sábado y domingo sin pasada
+    ctx = dataclasses.replace(ctx_sintetico, conteo_diario=conteo)
+    avisos = prediccion.predecir(ctx, "2019-09-11", "operativo", modelo=modelo_operativo)["avisos"]
+    assert len(avisos) == 1 and "07/09" in avisos[0] and "08/09" in avisos[0]
+    assert prediccion.predecir(ctx_sintetico, "2019-09-11", "operativo", modelo=modelo_operativo)["avisos"] == []

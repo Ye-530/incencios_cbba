@@ -55,7 +55,7 @@ class ColumnasVacias(BaseEstimator, TransformerMixin):
         return X
 
 
-class Ensamble(BaseEstimator, ClassifierMixin):
+class Ensamble(ClassifierMixin, BaseEstimator):
     """Promedio de las probabilidades de varios modelos iguales entrenados con distinta semilla.
 
     El GBM elige al azar el 80 % de las variables en cada división (max_features), así que cada
@@ -71,6 +71,20 @@ class Ensamble(BaseEstimator, ClassifierMixin):
 
     def predict_proba(self, X):
         return np.mean([e.predict_proba(X) for e in self.estimadores], axis=0)
+
+
+def variables_de_entrenamiento(modelo):
+    """Variables del régimen cuando se entrenó el modelo: las que usa más las que se excluyeron.
+
+    Sirve también con modelos de versiones anteriores, cuya huella no guardaba la lista de variables.
+    """
+    info = getattr(modelo, "info", None) or {}
+    return set(getattr(modelo, "variables", None) or []) | set(info.get("excluidas", []))
+
+
+def variables_cambiaron(modelo, ctx):
+    """¿El código arma ahora otras variables que las que había cuando se entrenó el modelo?"""
+    return variables_de_entrenamiento(modelo) != set(ctx.constructor.nombres(modelo.regimen))
 
 
 def restricciones(variables):

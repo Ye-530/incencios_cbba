@@ -105,6 +105,21 @@ def elegir_parametros(ctx, muestra, entrena, valida, carpeta, buscar, rehacer):
     return seleccion
 
 
+def modelos_finales_desactualizados(ctx):
+    """¿Algún modelo final se entrenó con otras variables que las que arma el código ahora?"""
+    for regimen in REGIMENES:
+        ruta = ctx.rutas.modelos / f"final_{regimen}.joblib"
+        if not ruta.exists():
+            continue
+        try:
+            modelo = joblib.load(ruta)
+        except Exception:  # noqa: BLE001 - un modelo que no abre también hay que rehacerlo
+            return True
+        if modelos.variables_cambiaron(modelo, ctx):
+            return True
+    return False
+
+
 def excluir_en(ctx, regimen, excluir):
     """De la lista a excluir, solo las variables que existen en ese régimen."""
     presentes = set(ctx.constructor.nombres(regimen))
@@ -196,9 +211,10 @@ def main(argv=None):
     dir_modelos = ctx.rutas.modelos
     dir_modelos.mkdir(parents=True, exist_ok=True)
     rehacer = args.rehacer
-    if not rehacer and any(dir_modelos.rglob("*.joblib")) and flujo.datos_cambiaron(dir_modelos, ctx.notas["huella"]):
-        print("Los datos cambiaron desde la última corrida (clima, relieve, cobertura o capas extra): "
-              "se reentrena todo.")
+    if not rehacer and any(dir_modelos.rglob("*.joblib")) and (
+            flujo.datos_cambiaron(dir_modelos, ctx.notas["huella"]) or modelos_finales_desactualizados(ctx)):
+        print("Los datos o las variables cambiaron desde la última corrida (clima, relieve, cobertura, capas "
+              "extra, satélites o código de las variables): se reentrena todo.")
         rehacer = True
 
     seleccion = elegir_parametros(ctx, muestra, entrena, valida, dir_modelos, args.busqueda, rehacer)

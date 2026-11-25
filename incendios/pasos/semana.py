@@ -30,7 +30,7 @@ import sys
 import time
 from datetime import date, datetime
 
-from incendios import actualizacion, flujo, prediccion
+from incendios import actualizacion, flujo, modelos, prediccion
 from incendios.malla import malla_cochabamba
 from incendios.pasos import comparar, descargar as dd, evaluar, modelar, preparar, visor
 from incendios.rutas import Rutas
@@ -104,6 +104,8 @@ def motivo_para_reentrenar(ctx):
     entrenado = getattr(modelo, "info", {}).get("huella")
     if not entrenado:
         return "el modelo no dice con qué datos se entrenó"
+    if modelos.variables_cambiaron(modelo, ctx):
+        return "cambiaron las variables respecto del entrenamiento (código nuevo)"
     cambios = flujo.claves_distintas(entrenado, ctx.notas["huella"])
     if cambios:
         return f"cambiaron {', '.join(cambios)} respecto del entrenamiento"

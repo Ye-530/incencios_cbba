@@ -11,7 +11,7 @@ departamento de Cochabamba para esa semana, en celdas de unos 500 m, siguiendo C
   la semana; ver [Actualización semanal](#actualización-semanal).
 
 Los resultados medidos están en [`reports/RESULTADOS.md`](reports/RESULTADOS.md). En 2024–2025, años
-que el modelo no vio, señalar cada semana el 5 % del territorio con mayor riesgo capturó el 40,7 % de
+que el modelo no vio, señalar cada semana el 5 % del territorio con mayor riesgo capturó el 40,6 % de
 las celdas con fuego (modo operativo) y el 32,8 % (modo estacional); la recurrencia histórica sola capturó
 el 27 % y un modelo por provincia, el 8,5 %. Qué se probó para llegar ahí, y qué no sirvió, está en
 [`docs/experimentos-2026-11-25.md`](docs/experimentos-2026-11-25.md).

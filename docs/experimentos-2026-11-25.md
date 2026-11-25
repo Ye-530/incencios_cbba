@@ -70,7 +70,7 @@ Con lo elegido en validación (fuego de los últimos días y promedio de tres se
 | Modo | Métrica | Antes | Ahora |
 |---|---|---:|---:|
 | Operativo | Captura 1 % | 12,2 % | 14,7 % |
-| Operativo | Captura 5 % | 39,2 % | 40,7 % |
+| Operativo | Captura 5 % | 39,2 % | 40,6 % |
 | Operativo | Captura 10 % | 62,0 % | 64,0 % |
 | Operativo | Área para capturar el 50 % | 7,1 % | 6,8 % |
 | Operativo | PR-AUC | 0,0125 | 0,0207 |

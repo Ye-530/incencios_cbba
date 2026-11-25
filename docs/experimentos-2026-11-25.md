@@ -42,7 +42,9 @@ que la mejor de las dos semillas sola, siempre en PR-AUC y captura al 10 %. Con 
 | 2022–2023 | 38,7 → 40,1 | 57,2 → 59,4 | 0,0157 → 0,0165 |
 | 2020–2021 | 43,1 → 44,3 | 64,9 → 66,4 | 0,0130 → 0,0156 |
 
-Los modelos de prueba y los finales promedian tres semillas (`config.SEMILLAS_GBM`). La fase de
+Con una tercera semilla (2026), en validación 2022–2023 el promedio de tres dio lo mismo que el de
+dos (captura al 5 % 40,1 % en ambos; PR-AUC 0,0163 y 0,0165) y más que cualquier semilla sola (39,0 a
+39,7 %). Los modelos de prueba y los finales promedian tres semillas (`config.SEMILLAS_GBM`). La fase de
 validación y la ablación siguen con una, para que sus comparaciones sean parejas y no triplicar su tiempo.
 
 ### Se descartó

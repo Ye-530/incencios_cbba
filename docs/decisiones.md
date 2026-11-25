@@ -184,9 +184,10 @@ se aceptó si ganaba en dos períodos de validación (2020–2021 y 2022–2023)
     siguen leyendo sus columnas en el mismo lugar. *Costo:* el modo operativo necesita los focos hasta el
     domingo; si llegan solo hasta el sábado, la predicción lo avisa (decisión 30).
 34. **Los modelos de prueba y los finales promedian tres semillas (`config.SEMILLAS_GBM`).** El promedio de
-    dos semillas fue igual o mejor que la mejor semilla sola en las cuatro corridas; se usan tres porque
-    promediar más modelos solo reduce la variación (el número de árboles es el elegido para un modelo
-    solo). La fase de validación y la ablación siguen con una semilla, para que sus comparaciones sean
+    dos semillas fue igual o mejor que la mejor semilla sola en las cuatro corridas. Con la tercera
+    semilla (2026), en validación 2022–2023 el promedio de tres dio lo mismo que el de dos (captura al
+    5 % 40,1 % en ambos; PR-AUC 0,0163 y 0,0165) y más que cualquier semilla sola (39,0 a 39,7 %): la
+    tercera no suma acierto, suma estabilidad. El número de árboles es el elegido para un modelo solo. La fase de validación y la ablación siguen con una semilla, para que sus comparaciones sean
     parejas y para no triplicar su tiempo. *Costo:* `modelar` entrena cuatro GBM más por régimen. La fila
     "recalibrada (descartada)" de `RESULTADOS.md` ajusta la isotónica con predicciones de validación de un
     modelo solo y la aplica al promedio de tres de la prueba: sirve como referencia, no como comparación

@@ -1,6 +1,6 @@
 """Modelos de riesgo: fábrica de estimadores, entrenamiento sobre la muestra y línea base por provincia."""
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
@@ -32,7 +32,7 @@ MONOTONIA = {
     "viento_7": 1, "vpd_7": 1, "ffmc": 1, "dmc": 1, "dc": 1, "isi": 1, "bui": 1, "fwi": 1,
     "fwi_7": 1, "fwi_max7": 1, "suelo_sup_7": -1, "suelo_raiz_7": -1,
     "an_prec_90": -1, "an_tmax_7": 1, "an_hrmin_7": -1, "an_fwi_7": 1, "an_dc": 1,
-    "rec_dep_1": 1, "rec_dep_4": 1, "rec_dep_anom": 1,
+    "rec_dep_1": 1, "rec_dep_4": 1, "rec_dep_anom": 1, "rec_dep_d3": 1,
 }
 
 
@@ -53,6 +53,24 @@ class ColumnasVacias(BaseEstimator, TransformerMixin):
         X = np.array(X, copy=True)
         X[:, self.vacias_] = 0.0
         return X
+
+
+class Ensamble(BaseEstimator, ClassifierMixin):
+    """Promedio de las probabilidades de varios modelos iguales entrenados con distinta semilla.
+
+    El GBM elige al azar el 80 % de las variables en cada división (max_features), así que cada
+    semilla da un modelo algo distinto; el promedio es más estable que cualquiera de ellos.
+    """
+
+    def __init__(self, estimadores):
+        self.estimadores = estimadores
+
+    @property
+    def classes_(self):
+        return self.estimadores[0].classes_
+
+    def predict_proba(self, X):
+        return np.mean([e.predict_proba(X) for e in self.estimadores], axis=0)
 
 
 def restricciones(variables):
@@ -134,18 +152,27 @@ def _columnas(ctx, regimen, excluir):
 
 
 def entrenar(nombre, regimen, muestra, ctx, filas=None, rapido=False, semilla=config.SEMILLA,
-             n_iter=None, excluir=None, **parametros):
-    """Entrena un modelo sobre la muestra caso-control (o sobre las filas indicadas)."""
+             n_iter=None, excluir=None, semillas=None, **parametros):
+    """Entrena un modelo sobre la muestra caso-control (o sobre las filas indicadas).
+
+    `semillas`: con más de una, entrena un modelo por semilla y promedia sus probabilidades
+    (Ensamble); sin ella, un solo modelo con `semilla`.
+    """
     columnas, variables = _columnas(ctx, regimen, excluir)
     sel = _filas(muestra, filas)
     X = muestra["X"][sel][:, columnas]
     y = muestra["y"][sel]
-    estimador = crear(nombre, semilla=semilla, rapido=rapido, n_iter=n_iter, variables=variables, **parametros)
-    estimador.fit(X, y)
+    semillas = [int(s) for s in semillas] if semillas else [int(semilla)]
+    estimadores = []
+    for s in semillas:
+        estimador = crear(nombre, semilla=s, rapido=rapido, n_iter=n_iter, variables=variables, **parametros)
+        estimador.fit(X, y)
+        estimadores.append(estimador)
+    estimador = estimadores[0] if len(estimadores) == 1 else Ensamble(estimadores)
     return ModeloRiesgo(nombre, regimen, estimador, columnas, variables,
                         muestra["tasa_neg"],
                         info={"filas": int(len(y)), "positivos": int(y.sum()), "parametros": parametros,
-                              "n_iter": n_iter, "excluidas": list(excluir or []),
+                              "n_iter": n_iter, "excluidas": list(excluir or []), "semillas": semillas,
                               "huella": ctx.notas.get("huella")})
 
 

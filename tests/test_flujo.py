@@ -238,12 +238,17 @@ def test_se_prefiere_el_clima_era5_y_se_puede_forzar_la_fuente(tmp_path, monkeyp
 
 # ---------------------------------------------------------------------- capas extra
 def test_las_capas_extra_entran_como_grupos_nuevos_y_quedan_en_la_huella(ctx, ctx_con_capas):
-    from incendios import capas
+    from incendios import capas, variables
     c = ctx_con_capas.constructor
     for regimen in ("estacional", "operativo"):
         assert set(capas.GRUPOS_CAPAS) <= set(c.grupos(regimen))
-        base = ctx.constructor.nombres(regimen)
+        # las capas van después de las variables de siempre y el fuego de los últimos días al final de
+        # todo: así un modelo entrenado antes (sin capas, o con capas y sin fuego de los últimos días)
+        # encuentra sus columnas en el mismo lugar
+        base = [n for n in ctx.constructor.nombres(regimen) if n not in variables.FUEGO_DIAS]
         assert c.nombres(regimen)[:len(base)] == base
+        if regimen == "operativo":
+            assert c.nombres(regimen)[-len(variables.FUEGO_DIAS):] == variables.FUEGO_DIAS
     assert ctx_con_capas.notas["huella"]["capas"] == ["caminos", "cobertura", "perdida_bosque", "poblacion", "quemas"]
     assert ctx_con_capas.notas["capas"]["quemas"]["anios"] == [2001, 2019]
     assert ctx.constructor.capas is None and ctx.notas["huella"]["capas"] == []
@@ -291,3 +296,29 @@ def test_una_huella_anterior_sin_variables_ni_satelites_no_obliga_a_reentrenar(c
 def test_las_notas_dicen_de_que_satelite_son_los_focos(ctx):
     assert list(ctx.notas["focos_por_satelite"]) == ["S-NPP"]
     assert ctx.notas["focos_por_satelite"]["S-NPP"][1] <= "2019-12-31"
+
+
+def test_el_flujo_entrega_los_focos_por_dia_y_el_operativo_suma_el_fuego_de_los_ultimos_dias(ctx):
+    from incendios import variables
+    assert ctx.constructor.nombres("operativo")[-len(variables.FUEGO_DIAS):] == variables.FUEGO_DIAS
+    # en la semana después del pico de agosto-octubre hay fuego de viernes a domingo en algún lugar
+    s = tiempo.semana_de_iso(2018, 36)
+    X = ctx.constructor.matriz(s, "operativo")
+    nombres = ctx.constructor.nombres("operativo")
+    assert X[:, nombres.index("rec_dep_d3")][0] > 0
+    assert (X[:, nombres.index("rec_d3_c")] <= X[:, nombres.index("rec_c1")]).all()     # los días están en la semana
+
+
+def test_las_predicciones_guardadas_solo_valen_con_la_misma_huella(ctx, tmp_path):
+    huella = ctx.notas["huella"]
+    np.save(tmp_path / "y.npy", np.zeros((2, 3), np.uint8))
+    np.save(tmp_path / "pred_gbm.npy", np.zeros((2, 3), np.float32))
+    assert not flujo.predicciones_vigentes(tmp_path, huella, ["gbm"])          # sin huella anotada: se rehacen
+    flujo.anotar_huella(tmp_path, huella)
+    assert flujo.predicciones_vigentes(tmp_path, huella, ["gbm"])
+    assert not flujo.predicciones_vigentes(tmp_path, huella, ["gbm", "provincia"])     # falta un modelo
+    otras = dict(huella, variables=huella["variables"] + ["rec_nueva"])
+    assert not flujo.predicciones_vigentes(tmp_path, otras, ["gbm"])           # cambiaron las variables
+    vieja = {k: v for k, v in huella.items() if k not in ("variables", "satelites")}
+    flujo.anotar_huella(tmp_path, vieja)
+    assert not flujo.predicciones_vigentes(tmp_path, huella, ["gbm"])          # huella de una versión anterior

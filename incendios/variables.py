@@ -5,7 +5,8 @@ Dos regímenes:
 - 'operativo' : además, el clima hasta la víspera y el fuego de las semanas previas.
 
 Regla de oro: nada de la semana `t` depende de focos de semanas >= t ni de clima
-desde el lunes de `t`. En régimen estacional tampoco de focos del mismo año ISO.
+desde el lunes de `t`. En régimen estacional tampoco de focos del mismo año ISO. El fuego de los
+últimos días usa solo días anteriores al lunes de `t`.
 """
 import numpy as np
 from scipy import sparse
@@ -46,6 +47,13 @@ _GRUPOS = {
     "fuego_reciente": RECIENTE,
     "clima_antecedente": list(VARS_ANTECEDENTE),
 }
+# Fuego de los últimos días antes del lunes (viernes a domingo, y el domingo solo), en la celda, en
+# sus entornos y en todo el departamento. Solo modo operativo y solo si el constructor recibe los
+# focos por día; va al final de la matriz, así los modelos entrenados sin él siguen leyendo sus
+# columnas en el mismo lugar.
+FUEGO_DIAS = ["rec_d3_c", "rec_d3_v3", "rec_d3_v11", "rec_d3_v41", "rec_d1_v11", "rec_dep_d3"]
+DIAS_RECIENTES = 3
+
 _GRUPOS_POR_REGIMEN = {
     "estacional": ["cobertura", "terreno", "historial", "epoca", "clima_normal"],
     "operativo": ["cobertura", "terreno", "historial", "epoca", "clima_normal",
@@ -99,7 +107,9 @@ def derivadas_estaticas(estaticas, malla):
 class Constructor:
     """Arma la matriz de variables de una semana para todas las celdas del departamento."""
 
-    def __init__(self, malla, mascara, estaticas, positivos, clima, pesos, n_semanas, capas=None):
+    def __init__(self, malla, mascara, estaticas, positivos, clima, pesos, n_semanas, capas=None, diarios=None):
+        """`positivos`: tabla (semana, celda) con fuego. `diarios`: tabla (dia, celda), con `dia` contado
+        desde el lunes de la semana 0; si se da, el régimen operativo suma el fuego de los últimos días."""
         self.malla = malla
         # capas extra (capas.CapasExtra): sus grupos van al final de ambos regímenes, así los
         # modelos entrenados sin ellas siguen encontrando sus columnas en el mismo lugar
@@ -128,6 +138,17 @@ class Constructor:
         dentro = mascara.ravel()
         self._n_depto = np.array([int(dentro[c].sum()) for c in self._celdas], dtype=np.float32)
 
+        # focos por día: lista de celdas por día (toda la malla)
+        self._celdas_dia = None
+        if diarios is not None:
+            n_dias = 7 * self.n_semanas
+            d = diarios[(diarios["dia"] >= 0) & (diarios["dia"] < n_dias)]
+            orden_d = np.argsort(d["dia"].to_numpy(), kind="stable")
+            dias = d["dia"].to_numpy()[orden_d]
+            celdas_d = d["celda"].to_numpy()[orden_d].astype(np.int64)
+            cortes_d = np.searchsorted(dias, np.arange(n_dias + 1))
+            self._celdas_dia = [celdas_d[cortes_d[i]:cortes_d[i + 1]] for i in range(n_dias)]
+
         self.anio_inicial = info_semana(0)["anio"]
         self.anio_ultimo_completo = max(
             anio for anio in range(self.anio_inicial, info_semana(self.n_semanas - 1)["anio"] + 1)
@@ -139,6 +160,8 @@ class Constructor:
         grupos = {g: list(_GRUPOS[g]) for g in _GRUPOS_POR_REGIMEN[regimen]}
         if self.capas is not None:
             grupos.update(self.capas.grupos())
+        if regimen == "operativo" and self._celdas_dia is not None:
+            grupos["fuego_dias"] = list(FUEGO_DIAS)
         return grupos
 
     def nombres(self, regimen):
@@ -262,6 +285,25 @@ class Constructor:
         ]).astype(np.float32)
         return bloque
 
+    def _malla_dias(self, dias):
+        """1 en las celdas con fuego en alguno de esos días (índices de día desde la semana 0)."""
+        presencia = np.zeros(self.malla.nfilas * self.malla.ncols, dtype=np.float32)
+        for i in dias:
+            if 0 <= i < len(self._celdas_dia) and len(self._celdas_dia[i]):
+                presencia[self._celdas_dia[i]] = 1.0
+        return presencia.reshape(self.malla.forma)
+
+    def _dias(self, semana):
+        """Fuego de viernes a domingo de la semana anterior y del domingo solo: días < lunes de `semana`."""
+        lunes = 7 * semana
+        ultimos = self._malla_dias(range(lunes - DIAS_RECIENTES, lunes))
+        domingo = self._malla_dias([lunes - 1])
+        en_depto = float(self._depto(ultimos).sum())
+        return np.column_stack([
+            self._depto(ultimos), self._vecindad(ultimos, 3), self._vecindad(ultimos, 11),
+            self._vecindad(ultimos, 41), self._vecindad(domingo, 11), np.full(self.n, en_depto),
+        ]).astype(np.float32)
+
     # ------------------------------------------------------------------ matriz
     def matriz(self, semana, regimen, anio_historial=None):
         """Variables de todas las celdas del departamento para la semana pedida: float32 [n, p].
@@ -298,4 +340,6 @@ class Constructor:
             bloques += [self._reciente(semana, info), self._a_celdas(self.clima.antecedente(semana))]
         if self.capas is not None:
             bloques.append(self._capas(info["anio"]))      # año real: CapasExtra avisa si es viejo
+        if regimen == "operativo" and self._celdas_dia is not None:
+            bloques.append(self._dias(semana))
         return np.concatenate(bloques, axis=1).astype(np.float32, copy=False)

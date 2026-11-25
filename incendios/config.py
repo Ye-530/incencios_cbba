@@ -24,6 +24,9 @@ ANIOS_PRUEBA = (2024, 2025)
 
 NEG_POR_SEMANA = 4000   # negativos muestreados por semana (caso-control)
 SEMILLA = 42
+# Los modelos de prueba y los finales promedian un GBM por semilla: el promedio fue igual o mejor
+# que la mejor semilla sola en dos períodos de validación (docs/experimentos-2026-11-25.md).
+SEMILLAS_GBM = (SEMILLA, 7, 2026)
 MIN_DIAS_OBSERVADOS = 4  # una semana con menos días de satélite no se usa para entrenar ni evaluar
 
 # Calidad del clima NASA POWER (ver informe, fase 2).

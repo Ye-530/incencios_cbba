@@ -108,6 +108,10 @@ def main(argv=None):
 
     series = {}
     # 1) años de prueba: predicciones ya calculadas con modelos que no vieron esos años
+    if not flujo.predicciones_vigentes(ctx.rutas.predicciones / "prueba", ctx.notas["huella"],
+                                       ("gbm_operativo", "gbm_estacional")):
+        print("  AVISO: las predicciones de prueba son de otro modelo o de otros datos; para que el visor "
+              "muestre el modelo actual en 2024–2025, ejecute antes: python -m incendios modelar")
     pru = ev.cargar_predicciones(ctx.rutas.predicciones / "prueba")
     y = np.asarray(pru["y"])
     for regimen in ("operativo", "estacional"):

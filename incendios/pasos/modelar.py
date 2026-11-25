@@ -3,6 +3,8 @@
   A. Selección: entrena con 2015–2021 y compara algoritmos sobre 2022–2023 (malla completa).
   B. Prueba: reentrena lo elegido con 2015–2023 y puntúa 2024–2025, que nunca se usó.
   C. Final: reentrena con todo (2015–2025) y guarda los modelos para predecir.
+En B y C el GBM es el promedio de un modelo por semilla (config.SEMILLAS_GBM); en A, uno solo, igual
+que la ablación, para que sus comparaciones sean parejas.
 
     python -m incendios modelar              # usa los parámetros ya elegidos si existen
     python -m incendios modelar --busqueda   # además compite variantes (variables y parámetros)
@@ -120,8 +122,11 @@ def entrenar_o_cargar(ruta, rehacer, fabrica):
     return modelo
 
 
-def fase(ctx, muestra, filas, anios_eval, algoritmos, seleccion, nombre, rehacer):
-    """Entrena con `filas`, puntúa toda la malla en `anios_eval` y devuelve los modelos."""
+def fase(ctx, muestra, filas, anios_eval, algoritmos, seleccion, nombre, rehacer, semillas=None):
+    """Entrena con `filas`, puntúa toda la malla en `anios_eval` y devuelve los modelos.
+
+    `semillas`: las del GBM (varias = promedio de un modelo por semilla); los otros algoritmos usan una.
+    """
     dir_modelos = ctx.rutas.modelos / nombre
     dir_pred = ctx.rutas.predicciones / nombre
     print(f"\n== Fase {nombre}: {int(filas.sum()):,} filas de entrenamiento "
@@ -131,15 +136,15 @@ def fase(ctx, muestra, filas, anios_eval, algoritmos, seleccion, nombre, rehacer
         for algoritmo in algoritmos:
             extra = {"excluir": excluir_en(ctx, regimen, seleccion["excluir"])}
             if algoritmo == "gbm":
-                extra.update(seleccion["parametros"], n_iter=seleccion[regimen]["n_iter"])
+                extra.update(seleccion["parametros"], n_iter=seleccion[regimen]["n_iter"], semillas=semillas)
             entrenados[f"{algoritmo}_{regimen}"] = entrenar_o_cargar(
                 dir_modelos / f"{algoritmo}_{regimen}.joblib", rehacer,
                 lambda a=algoritmo, r=regimen, e=extra: modelos.entrenar(a, r, muestra, ctx, filas=filas, **e))
     provincia = entrenar_o_cargar(dir_modelos / "provincia.joblib", rehacer,
                                   lambda: modelos.entrenar_provincia(muestra, ctx, filas=filas))
     semanas = ctx.semanas_utiles(*anios_eval)
-    if (dir_pred / "y.npy").exists() and not rehacer \
-            and all((dir_pred / f"pred_{n}.npy").exists() for n in (*entrenados, "provincia", "recurrencia")):
+    if not rehacer and flujo.predicciones_vigentes(dir_pred, ctx.notas["huella"],
+                                                    (*entrenados, "provincia", "recurrencia")):
         print(f"  predicciones de {nombre} ya calculadas")
         return entrenados, provincia
     puntuadores = {n: (lambda c, s, X, m=m: m.puntaje(X)) for n, m in entrenados.items()}
@@ -148,6 +153,7 @@ def fase(ctx, muestra, filas, anios_eval, algoritmos, seleccion, nombre, rehacer
     t0 = time.time()
     print(f"  puntuando la malla completa en {len(semanas)} semanas de {anios_eval[0]}–{anios_eval[1]}...")
     flujo.puntuar_malla(ctx, semanas, puntuadores, dir_pred)
+    flujo.anotar_huella(dir_pred, ctx.notas["huella"])
     print(f"  listo ({reloj(t0)})")
     return entrenados, provincia
 
@@ -166,13 +172,13 @@ def ablacion(ctx, muestra, filas, seleccion, rehacer):
             dir_modelos / f"sin_{grupo}.joblib", rehacer,
             lambda e=excluir: modelos.entrenar("gbm", "operativo", muestra, ctx, filas=filas, excluir=e,
                                                n_iter=seleccion["operativo"]["n_iter"], **seleccion["parametros"]))
-    if (dir_pred / "y.npy").exists() and not rehacer \
-            and all((dir_pred / f"pred_{n}.npy").exists() for n in entrenados):
+    if not rehacer and flujo.predicciones_vigentes(dir_pred, ctx.notas["huella"], entrenados):
         print("  predicciones de la ablación ya calculadas")
         return
     semanas = ctx.semanas_utiles(*config.ANIOS_VALIDA)
     flujo.puntuar_malla(ctx, semanas, {n: (lambda c, s, X, m=m: m.puntaje(X)) for n, m in entrenados.items()},
                         dir_pred)
+    flujo.anotar_huella(dir_pred, ctx.notas["huella"])
 
 
 def main(argv=None):
@@ -201,8 +207,9 @@ def main(argv=None):
     fase(ctx, muestra, entrena, config.ANIOS_VALIDA, modelos.NOMBRES, seleccion, "validacion", rehacer)
     if args.ablacion:
         ablacion(ctx, muestra, entrena, seleccion, rehacer)
-    # B. el algoritmo elegido (GBM) y las líneas base, sobre los años de prueba
-    fase(ctx, muestra, entrena | valida, config.ANIOS_PRUEBA, ("gbm",), seleccion, "prueba", rehacer)
+    # B. el algoritmo elegido (GBM, promedio de config.SEMILLAS_GBM) y las líneas base, sobre los años de prueba
+    fase(ctx, muestra, entrena | valida, config.ANIOS_PRUEBA, ("gbm",), seleccion, "prueba", rehacer,
+         semillas=config.SEMILLAS_GBM)
 
     # C. modelos finales con todos los años. Su probabilidad es la del modelo corregida por el
     # muestreo, sin recalibrar: la recalibración isotónica ajustada con los dos años de validación
@@ -217,7 +224,8 @@ def main(argv=None):
 
         def fabrica(r=regimen):
             m = modelos.entrenar("gbm", r, muestra, ctx, filas=todo, n_iter=seleccion[r]["n_iter"],
-                                 excluir=excluir_en(ctx, r, seleccion["excluir"]), **seleccion["parametros"])
+                                 excluir=excluir_en(ctx, r, seleccion["excluir"]), semillas=config.SEMILLAS_GBM,
+                                 **seleccion["parametros"])
             m.info["anios"] = [config.ANIOS_ENTRENA[0], config.ANIOS_PRUEBA[1]]
             return m
         entrenar_o_cargar(dir_modelos / f"final_{regimen}.joblib", rehacer, fabrica)

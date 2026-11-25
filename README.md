@@ -5,7 +5,8 @@ departamento de Cochabamba para esa semana, en celdas de unos 500 m, siguiendo C
 
 - **Modo estacional:** cualquier fecha futura. Usa relieve, cobertura, historial de focos hasta el
   año anterior y época del año.
-- **Modo operativo:** la semana que empieza. Suma el clima y los focos hasta el domingo previo.
+- **Modo operativo:** la semana que empieza. Suma el clima y los focos hasta el domingo previo,
+  incluido el fuego de viernes a domingo, que es el que más anticipa la semana.
 - **Actualización semanal:** baja los datos nuevos, reentrena si cambiaron las fuentes y predice
   la semana; ver [Actualización semanal](#actualización-semanal).
 
@@ -88,7 +89,9 @@ proyecto instalado con `pip install -e`). `diagnostico` es `descargar.py` sin op
 
 `models/` ya trae los modelos entrenados: puede ir directo a `predecir`. `evaluar` y `visor` necesitan
 las predicciones de prueba que deja `modelar` en `data/processed/` (unos 300 MB que no vienen en el
-zip): se crean al entrenar. Los modelos guardados dependen de la versión de scikit-learn con que se
+repositorio): se crean al entrenar. Tampoco viene la muestra de entrenamiento (~1 GB): la arma
+`preparar` en unos minutos. Si las predicciones guardadas son de otro modelo o de otros datos, `modelar`
+las vuelve a calcular solo, y `visor` lo avisa. Los modelos guardados dependen de la versión de scikit-learn con que se
 entrenaron (`models/versiones.json`): si `predecir` avisa o falla, reentrene con `entrenar`.
 
 ### Predecir
@@ -220,9 +223,11 @@ línea para `crontab -e`. Necesita haber instalado el proyecto con `pip install 
 
 **Satélites.** NASA dejó de producir los focos de S-NPP el 2 de noviembre de 2026 a las 13:00 UTC. El
 proyecto usa S-NPP hasta el 1 de noviembre y NOAA-20 desde el 2 (mismo instrumento, 375 m, órbita
-parecida); la cadena está en `FUENTES_FOCOS`, en `incendios/config.py`. El modelo se entrenó con S-NPP:
-cuando haya unos años de NOAA-20, conviene reentrenar con NOAA-20 de punta a punta
-(`descargar --que focos --noaa20-historico` baja la serie desde 2018).
+parecida); la cadena está en `FUENTES_FOCOS`, en `incendios/config.py`. El modelo se entrenó con S-NPP,
+y se comprobó que sigue funcionando con NOAA-20: alimentado y juzgado con focos NOAA-20 en 2024–2025
+captura lo mismo (39,4 % al 5 %) y reentrenarlo con NOAA-20 desde 2018 gana poco (40,0 %); ver
+`docs/experimentos-2026-11-25.md`. Cuando haya unos años de NOAA-20 propio, se puede reentrenar con
+NOAA-20 de punta a punta (`descargar --que focos --noaa20-historico` baja la serie desde 2018).
 
 **Claves.** `credenciales.json` está fuera de git y de los informes; no lo comparta ni lo suba a ningún
 lado. Las variables de entorno `CDSAPI_KEY`, `EE_PROYECTO` y `FIRMS_MAP_KEY` lo reemplazan si prefiere no
@@ -232,6 +237,10 @@ guardar claves en archivos.
 
 - La variable objetivo son **focos de calor VIIRS**: incluyen chaqueos y quemas agrícolas, no solo
   incendios forestales. El 80 % está en el trópico (Chapare y Carrasco).
+- Que una celda de 500 m "tenga fuego" en una semana depende mucho de qué satélite pasó mientras el
+  fuego estaba activo: en 2024–2025, de las celdas-semana donde S-NPP vio fuego, NOAA-20 (el mismo
+  instrumento, 50 minutos después) lo vio en la misma celda y semana solo en el 30 %. Eso pone un techo
+  bajo al acierto celda por celda, y explica por qué las mejoras del modelo se miden en décimas.
 - Se retiran las **fuentes de calor fijas** (hornos, chimeneas, antorchas de gas): celdas con
   detecciones en 10 o más semanas, casi siempre nocturnas. La lista está en
   `reports/tablas/auditoria_fuentes_fijas.csv`; los umbrales, en `incendios/config.py`.

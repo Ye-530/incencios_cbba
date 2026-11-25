@@ -241,3 +241,56 @@ def test_el_constructor_da_lo_mismo_con_pesos_dispersos():
     densa = c.matriz(s, "operativo")
     c.pesos = sparse.csr_matrix(c.pesos)
     assert np.allclose(c.matriz(s, "operativo"), densa, equal_nan=True, rtol=1e-5, atol=1e-4)   # orden de sumas
+
+
+# ------------------------------------------------------------------ fuego de los últimos días
+def mundo_con_dias(dias_celdas):
+    """Mundo con focos por día: [(día desde el lunes de la semana 0, celda)]; las semanas salen de los días."""
+    base = mundo([[d // 7, c] for d, c in dias_celdas])
+    est = {f"lc_{n}": np.full((NF, NC), 0.1, np.float32) for n in CLASES_WORLDCOVER.values()}
+    est.update({n: np.zeros((NF, NC), np.float32) for n in VARS_TERRENO})
+    pos = pd.DataFrame({"semana": [d // 7 for d, _ in dias_celdas], "celda": [c for _, c in dias_celdas]},
+                       columns=["semana", "celda"]).drop_duplicates()
+    diarios = pd.DataFrame(dias_celdas, columns=["dia", "celda"])
+    return variables.Constructor(base.malla, base.mascara, est, pos, base.clima, base.pesos, base.n_semanas,
+                                 diarios=diarios)
+
+
+def test_sin_focos_por_dia_no_hay_fuego_de_los_ultimos_dias():
+    c = mundo([])
+    assert "fuego_dias" not in c.grupos("operativo")
+    assert not set(variables.FUEGO_DIAS) & set(c.nombres("operativo"))
+
+
+def test_el_fuego_de_los_ultimos_dias_va_al_final_y_solo_en_el_operativo():
+    c = mundo_con_dias([])
+    ope, est = c.nombres("operativo"), c.nombres("estacional")
+    assert ope[-len(variables.FUEGO_DIAS):] == variables.FUEGO_DIAS
+    assert not set(variables.FUEGO_DIAS) & set(est) and ope[:len(est)] == est
+    assert c.matriz(sem(2017, 36), "operativo").shape == (NF * NC, len(ope))
+    assert c.matriz(sem(2017, 36), "estacional").shape == (NF * NC, len(est))
+
+
+def test_cuenta_el_fuego_de_viernes_a_domingo_y_del_domingo():
+    t = sem(2017, 36)
+    lunes = 7 * t
+    c = mundo_con_dias([(lunes - 1, celda(12, 14)), (lunes - 3, celda(1, 1)), (lunes - 4, celda(9, 9))])
+    d3 = columna(c, "operativo", "rec_d3_c", t)
+    assert d3[celda(12, 14)] == 1 and d3[celda(1, 1)] == 1 and d3[celda(9, 9)] == 0      # el jueves no entra
+    domingo = columna(c, "operativo", "rec_d1_v11", t)
+    assert domingo[celda(12, 14)] == 1 and domingo[celda(1, 1)] == 0                      # (1,1) ardió el viernes
+    assert columna(c, "operativo", "rec_d3_v3", t)[celda(2, 2)] == 1                      # vecina del viernes
+    assert columna(c, "operativo", "rec_d3_v11", t)[celda(6, 6)] == 1                     # a 5 celdas del viernes
+    assert columna(c, "operativo", "rec_d3_v41", t)[celda(0, 0)] == 2                     # en ~20 km, las dos
+    assert (columna(c, "operativo", "rec_dep_d3", t) == 2).all()
+    assert columna(c, "operativo", "rec_d3_c", t + 1).sum() == 0                          # la semana siguiente, nada
+
+
+def test_el_fuego_de_los_ultimos_dias_no_mira_el_lunes_ni_despues():
+    t = sem(2017, 36)
+    lunes = 7 * t
+    pasado = [(lunes - 2, celda(4, 4)), (lunes - 10, celda(7, 7))]
+    futuro = [(lunes + k, celda(f, 3)) for k in range(0, 9) for f in range(NF)]
+    a, b = mundo_con_dias(pasado), mundo_con_dias(pasado + futuro)
+    for regimen in variables.REGIMENES:
+        assert np.array_equal(a.matriz(t, regimen), b.matriz(t, regimen), equal_nan=True)

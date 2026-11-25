@@ -77,7 +77,7 @@ def test_sin_restriccion_el_modelo_copia_la_forma_de_u():
 
 def test_las_restricciones_cubren_el_clima_antecedente_y_la_actividad_departamental():
     from incendios import clima
-    for nombre in clima.VARS_ANTECEDENTE + ["rec_dep_1", "rec_dep_4", "rec_dep_anom"]:
+    for nombre in clima.VARS_ANTECEDENTE + ["rec_dep_1", "rec_dep_4", "rec_dep_anom", "rec_dep_d3"]:
         assert modelos.MONOTONIA[nombre] in (-1, 1), nombre
     assert modelos.MONOTONIA["prec_90"] == -1 and modelos.MONOTONIA["fwi_7"] == 1
     assert modelos.MONOTONIA["hrmin_7"] == -1 and modelos.MONOTONIA["dias_sin_lluvia"] == 1
@@ -123,6 +123,32 @@ def test_la_parada_temprana_devuelve_un_numero_de_arboles_y_su_historial(ctx_sin
                                                        verboso=False, max_leaf_nodes=7)
     assert n_iter % modelos.PASO_PARADA == 0 and modelos.PASO_PARADA <= n_iter <= modelos.ITER_MAX
     assert [h["n_iter"] for h in historial] == list(range(modelos.PASO_PARADA, historial[-1]["n_iter"] + 1, modelos.PASO_PARADA))
-    mejor = min(historial, key=lambda h: h["perdida"])
-    assert mejor["n_iter"] == n_iter
+    # se queda con el último número de árboles que mejoró la pérdida en más de 1e-5: una mejora menor
+    # que eso no justifica más árboles, así que la pérdida elegida está a menos de 1e-5 de la mínima
+    perdidas = {h["n_iter"]: h["perdida"] for h in historial}
+    assert perdidas[n_iter] <= min(perdidas.values()) + 1e-5
+    assert all(perdidas[k] > perdidas[n_iter] + 1e-5 for k in perdidas if k < n_iter)
     assert set(historial[0]) == {"n_iter", "perdida", "pr_auc_muestra"}
+
+
+def test_el_ensamble_promedia_las_probabilidades_de_sus_modelos():
+    X, y = datos()
+    a = modelos.crear("gbm", semilla=1, rapido=True).fit(X, y)
+    b = modelos.crear("gbm", semilla=2, rapido=True).fit(X, y)
+    ens = modelos.Ensamble([a, b])
+    assert np.allclose(ens.predict_proba(X), (a.predict_proba(X) + b.predict_proba(X)) / 2)
+    assert list(ens.classes_) == [0, 1]
+
+
+def test_entrenar_con_varias_semillas_promedia_un_modelo_por_semilla(ctx_sintetico, muestra_sintetica):
+    uno = modelos.entrenar("gbm", "operativo", muestra_sintetica, ctx_sintetico, rapido=True, semilla=7)
+    varios = modelos.entrenar("gbm", "operativo", muestra_sintetica, ctx_sintetico, rapido=True, semillas=[7, 8, 9])
+    assert isinstance(varios.estimador, modelos.Ensamble) and len(varios.estimador.estimadores) == 3
+    assert varios.info["semillas"] == [7, 8, 9] and uno.info["semillas"] == [7]
+    X = muestra_sintetica["X"][:500]
+    sueltos = [modelos.entrenar("gbm", "operativo", muestra_sintetica, ctx_sintetico, rapido=True, semilla=s)
+               for s in (7, 8, 9)]
+    from incendios.muestreo import corregir_prior
+    crudo = np.mean([m.estimador.predict_proba(X[:, m.columnas])[:, 1] for m in sueltos], axis=0)
+    assert np.allclose(varios.puntaje(X), corregir_prior(crudo, muestra_sintetica["tasa_neg"]), atol=1e-6)
+    assert np.allclose(uno.puntaje(X), sueltos[0].puntaje(X))

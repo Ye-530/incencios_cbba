@@ -154,7 +154,8 @@ mientras construía. Cada una dice qué se decidió, por qué y qué cuesta si r
     decía que se promediaban tres entrenamientos con distinta semilla; el código entrena un
     `HistGradientBoostingClassifier` con `SEMILLA = 42` por régimen (`incendios/pasos/modelar.py`). Las
     cifras de `RESULTADOS.md` corresponden a ese modelo único. Promediar semillas es una mejora posible
-    (triplica el tiempo de `modelar`), no algo ya hecho.
+    (triplica el tiempo de `modelar`), no algo ya hecho. *Actualización:* desde la decisión 34 los
+    modelos de prueba y los finales sí promedian tres semillas.
 29. **FIRMS: 5 días por consulta.** El código ya pedía tramos de 5 días; dos pruebas esperaban 10 y
     fallaban. Se dejó 5 (conservador; la documentación de la API ha dicho 10) y las pruebas siguen a la
     constante `MAX_DIAS_FIRMS`.
@@ -168,20 +169,63 @@ mientras construía. Cada una dice qué se decidió, por qué y qué cuesta si r
 32. **Los mapas de ejemplo de `reports/mapas/` se regeneraron.** El estacional de 2027 se había generado
     con un modelo que no coincidía con los datos (su resumen lo avisaba).
 
+## Mejoras del modelo (25 de noviembre de 2026)
+
+Las mediciones están en `docs/experimentos-2026-11-25.md`. Antes de decidir se midió el ruido: con solo
+cambiar la semilla, la captura al 5 % en validación se mueve hasta 1,3 puntos, y el intervalo al 95 % de
+una diferencia entre variantes (remuestreando semanas) es de unos ±3 puntos. Por eso una variante solo
+se aceptó si ganaba en dos períodos de validación (2020–2021 y 2022–2023) y con dos semillas.
+
+33. **Fuego de los últimos días (grupo `fuego_dias`, modo operativo).** Celdas con fuego de viernes a
+    domingo antes del lunes (en la celda y en 3×3, 11×11 y 41×41 celdas), con fuego el domingo (11×11) y
+    el total del departamento de esos tres días, con restricción de monotonía como las otras variables
+    departamentales. Mejoró la captura al 1 % y al 10 % en las cuatro corridas y la del 5 % en tres de
+    cuatro (en promedio, alrededor de un punto). Va al final de la matriz, así los modelos anteriores
+    siguen leyendo sus columnas en el mismo lugar. *Costo:* el modo operativo necesita los focos hasta el
+    domingo; si llegan solo hasta el sábado, la predicción lo avisa (decisión 30).
+34. **Los modelos de prueba y los finales promedian tres semillas (`config.SEMILLAS_GBM`).** El promedio fue
+    igual o mejor que la mejor semilla sola en las cuatro corridas. La fase de validación y la ablación
+    siguen con una semilla, para que sus comparaciones sean parejas y para no triplicar su tiempo.
+    *Costo:* `modelar` entrena cuatro GBM más por régimen.
+35. **Se descartaron:** ubicación (latitud y longitud), historial extra (años desde el último fuego,
+    años con fuego, máximo anual), intensidad del fuego reciente (detecciones, FRP, semanas desde el
+    último fuego), suavizado espacial de las probabilidades, mezcla con el bosque aleatorio y usar la
+    unión de los satélites S-NPP y NOAA-20. Las cuatro primeras empeoraron la validación; las dos últimas
+    no ganaron lo suficiente. La variable de días de satélite de la semana anterior tenía una fuga (su
+    valor dependía del lunes de la semana predicha) y no se usa.
+36. **Se mantiene la cadena de satélites (S-NPP hasta el 1-nov-2026 y NOAA-20 después).** El modelo
+    entrenado con S-NPP, alimentado y juzgado con focos NOAA-20 en 2024–2025, captura 39,4 % al 5 %;
+    reentrenado con NOAA-20 desde abril de 2018, 40,0 %. Los dos satélites coinciden solo en el 30 % de
+    las celdas-semana con fuego: buena parte del "dónde" de un foco es azar de la pasada.
+37. **La huella del modelo incluye las variables y los satélites, y las predicciones guardadas quedan
+    atadas a ella.** Una revisión independiente vio que `modelar` reutilizaba modelos y predicciones de
+    otra configuración sin avisar si cambiaban las variables. Ahora `modelar` recalcula las predicciones
+    cuya huella no coincide (las de versiones anteriores, sin huella, también), y `visor` avisa.
+38. **La muestra de entrenamiento ya no se versiona.** Pesaba 1 GB en Git LFS (la cuota gratuita de
+    GitHub es de 1 GB al mes) y `preparar` la rehace en unos minutos. *Costo:* `evaluar` necesita correr
+    `preparar` antes (o `entrenar`, que lo hace todo).
+
 ## Pendientes menores
 
 - El modelo no usa todavía las coberturas de MapBiomas para recalcular la distancia a cultivos ni a
   zonas urbanas (esas siguen saliendo de WorldCover 2021).
 - La búsqueda de variantes del modelo (`modelar --busqueda`) no se repitió con los datos mejorados;
-  `models/seleccion.json` conserva la variante `clima_compacto` elegida con NASA POWER.
+  `models/seleccion.json` conserva la variante `clima_compacto` elegida con NASA POWER. Con el ruido
+  medido (decisión 33), sus diferencias habría que confirmarlas en dos períodos.
 - El mapa PNG de `predecir` no dibuja el contorno del departamento ni los municipios.
 - La importancia por variable usa una sola repetición; la de grupos usa más.
 - El agente de usuario de las descargas (`AGENTE`, en `incendios/pasos/descargar.py`) lleva un correo
   personal, como pide la etiqueta de Overpass; cámbielo si el proyecto cambia de responsable.
-- `data/processed/muestra/muestra_X.npy` (1 GB) viaja por Git LFS aunque `preparar` lo rehace en minutos;
-  la cuota gratuita de LFS en GitHub es de 1 GB al mes, así que conviene sacarlo del repositorio.
+- `data/external/weather/clima_era5land_diario.csv.gz` pesa 88 MB y crece unos 6 MB por año: GitHub
+  rechaza archivos de más de 100 MB, así que hacia 2028 habrá que llevarlo a Git LFS o armarlo desde
+  los diarios por año (`era5land/diario/`), que ya están en el repositorio.
+- Desde el 2-nov-2026 FIRMS ofrece NOAA-20 y NOAA-21. Usar los dos a la vez no se probó con NOAA-21; la
+  unión S-NPP + NOAA-20 no mejoró el modelo (decisión 35).
 
 ## Revisión
 
 La revisión final del código la hizo el mismo autor; no hubo un revisor independiente.
-Lo mismo vale para la parte de datos mejorados y actualización semanal.
+Lo mismo vale para la parte de datos mejorados y actualización semanal. Las variables nuevas y el
+cambio del 25 de noviembre de 2026 sí pasaron por una revisión independiente: tres revisores (fugas,
+errores numéricos, uso operativo) y dos verificadores por hallazgo; lo confirmado se corrigió
+(decisiones 35 y 37).

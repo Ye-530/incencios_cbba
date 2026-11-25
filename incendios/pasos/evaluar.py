@@ -332,7 +332,8 @@ NOMBRE_GRUPO = {"cobertura": "Cobertura de suelo", "terreno": "Relieve", "histor
                 "epoca": "Época del año", "clima_normal": "Clima normal", "fuego_reciente": "Fuego reciente",
                 "clima_antecedente": "Clima antecedente", "quemas_previas": "Quemas previas (MODIS)",
                 "deforestacion": "Deforestación (Hansen)", "uso_suelo": "Uso del suelo (MapBiomas)",
-                "poblacion": "Población (WorldPop)", "caminos": "Caminos (OpenStreetMap)"}
+                "poblacion": "Población (WorldPop)", "caminos": "Caminos (OpenStreetMap)",
+                "fuego_dias": "Fuego de los últimos días"}
 
 
 def figura_importancia(imp, ruta):

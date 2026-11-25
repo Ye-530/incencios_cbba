@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from scipy.ndimage import distance_transform_edt
 
 from . import config, focos as mod_focos
@@ -14,7 +15,7 @@ from .malla import malla_cochabamba, rasterizar_capas, rasterizar_geometria
 from .muestreo import muestrear
 from .rasters import archivos_de, variables_estaticas
 from .rutas import Rutas
-from .tiempo import info_semana, semana_de_fecha, semanas_de_anio
+from .tiempo import EPOCA, info_semana, semana_de_fecha, semanas_de_anio
 from .variables import Constructor
 
 # Archivos de clima en orden de preferencia, según INCENDIOS_CLIMA
@@ -59,6 +60,22 @@ def datos_cambiaron(carpeta, huella):
 def anotar_huella(carpeta, huella):
     Path(carpeta).mkdir(parents=True, exist_ok=True)
     (Path(carpeta) / "huella.json").write_text(json.dumps(huella, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
+def predicciones_vigentes(carpeta, huella, nombres):
+    """¿Las predicciones guardadas en `carpeta` son de modelos entrenados con estos datos y variables?
+
+    Están los archivos de esos modelos y la huella anotada al puntuar es la misma. Sin huella anotada
+    (predicciones de una versión anterior) no se reutilizan: se vuelven a calcular.
+    """
+    carpeta = Path(carpeta)
+    if not (carpeta / "y.npy").exists() or not all((carpeta / f"pred_{n}.npy").exists() for n in nombres):
+        return False
+    ruta = carpeta / "huella.json"
+    if not ruta.exists():
+        return False
+    anotada = json.loads(ruta.read_text(encoding="utf-8"))
+    return not claves_distintas(anotada, huella) and all(k in anotada for k in _CLAVES_NUEVAS)
 
 
 def capas_activadas():
@@ -218,7 +235,11 @@ def cargar_todo(rutas=None, malla=None, verboso=True):
     clima = ClimaSemanal.desde_csv(ruta_clima)
     pesos = pesos_idw(LON.ravel()[idx], LAT.ravel()[idx], clima.tabla["lon_c"], clima.tabla["lat_c"])
     extra = CapasExtra.desde_carpeta(rutas.capas, malla) if capas_activadas() else None
-    constructor = Constructor(malla, mascara, estaticas, positivos, clima, pesos, n_semanas, capas=extra)
+    # focos por día (para el fuego de los últimos días antes de cada lunes)
+    diarios = pd.DataFrame({"dia": (vegetacion["fecha"].dt.normalize() - pd.Timestamp(EPOCA)).dt.days.to_numpy(),
+                            "celda": vegetacion["celda"].to_numpy()}).drop_duplicates()
+    constructor = Constructor(malla, mascara, estaticas, positivos, clima, pesos, n_semanas, capas=extra,
+                              diarios=diarios)
 
     notas = {
         "celdas": int(len(idx)),
@@ -274,7 +295,8 @@ def cargar_todo(rutas=None, malla=None, verboso=True):
 def construir_muestra(ctx, semanas, n_neg, semilla=config.SEMILLA, verboso=True):
     """Muestra caso-control: por semana, todas las celdas con fuego y `n_neg` sin fuego.
 
-    Devuelve la matriz en régimen operativo (el estacional son sus primeras columnas).
+    Devuelve la matriz en régimen operativo; las columnas de cada régimen se eligen por nombre
+    (columnas_de), porque las capas extra y el fuego de los últimos días van al final.
     """
     rng = np.random.default_rng(semilla)
     c = ctx.constructor

@@ -24,3 +24,7 @@ salidas/
 
 # Predicciones del modelo (archivos generados de 69-71 MB, se recrean con 'entrenar')
 data/processed/predicciones/
+# Muestra de entrenamiento (~1 GB): la rehace 'python -m incendios preparar' en unos minutos
+data/processed/muestra/
+# Modelos de la ablación: solo sirven para la tabla de ablación de 'evaluar'
+models/ablacion/

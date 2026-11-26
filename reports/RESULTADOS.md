@@ -11,11 +11,11 @@ Generado por `python -m incendios evaluar`. Todas las métricas se calculan sobr
 | Modelo | ROC-AUC | PR-AUC | Captura 1 % | Captura 5 % | Captura 10 % | Área para 50 % | Área para 80 % |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Operativo (500 m) | 0,936 | 0,017 | 14,1 % | 39,5 % | 58,7 % | 7,5 % | 19,2 % |
-| Regresión logística, operativo | 0,923 | 0,016 | 13,2 % | 36,0 % | 57,1 % | 8,1 % | 20,9 % |
+| Regresión logística, operativo | 0,922 | 0,016 | 13,2 % | 36,1 % | 57,2 % | 8,1 % | 20,9 % |
 | Bosque aleatorio, operativo | 0,939 | 0,016 | 14,6 % | 40,8 % | 61,1 % | 7,0 % | 18,9 % |
 | Estacional (500 m) | 0,924 | 0,012 | 10,7 % | 33,0 % | 52,5 % | 9,4 % | 21,9 % |
 | Bosque aleatorio, estacional | 0,926 | 0,011 | 10,4 % | 33,9 % | 53,5 % | 9,0 % | 22,2 % |
-| Regresión logística, estacional | 0,912 | 0,011 | 9,9 % | 30,5 % | 51,2 % | 9,7 % | 25,1 % |
+| Regresión logística, estacional | 0,912 | 0,011 | 10,0 % | 30,3 % | 51,1 % | 9,7 % | 25,2 % |
 | Recurrencia histórica | 0,890 | 0,008 | 7,9 % | 25,7 % | 42,6 % | 12,5 % | 29,0 % |
 | Por provincia (enfoque anterior) | 0,846 | 0,003 | 1,5 % | 7,5 % | 16,3 % | 29,1 % | 51,6 % |
 
